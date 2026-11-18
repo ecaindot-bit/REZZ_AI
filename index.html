@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>REZZ AI</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ background:#080d18;
+ color:white;
+ font-family:Arial,sans-serif;
+}
+header{
+ padding:20px;
+ background:#111a2b;
+ border-bottom:1px solid #26344b;
+ font-size:23px;
+ font-weight:bold;
+}
+header span{color:#42a5ff}
+#chat{
+ height:calc(100vh - 150px);
+ overflow-y:auto;
+ padding:15px;
+}
+.msg{
+ padding:13px;
+ margin:12px 0;
+ border-radius:13px;
+ max-width:90%;
+ line-height:1.5;
+ white-space:pre-wrap;
+}
+.bot{background:#19263b}
+.user{
+ background:#1769aa;
+ margin-left:auto;
+}
+footer{
+ position:fixed;
+ bottom:0;
+ width:100%;
+ display:flex;
+ padding:12px;
+ background:#111a2b;
+ gap:8px;
+}
+input{
+ flex:1;
+ min-width:0;
+ padding:14px;
+ border-radius:12px;
+ border:1px solid #34445c;
+ background:#19263b;
+ color:white;
+ outline:none;
+}
+button{
+ border:0;
+ border-radius:12px;
+ padding:12px 17px;
+ background:#168cff;
+ color:white;
+ font-weight:bold;
+}
+</style>
+</head>
+<body>
+
+<header>REZZ <span>AI</span></header>
+
+<div id="chat">
+<div class="msg bot">
+Halo! Saya REZZ AI.
+
+Ada yang bisa saya bantu hari ini?
+</div>
+</div>
+
+<footer>
+<input id="message" placeholder="Tanyakan sesuatu...">
+<button onclick="send()">Kirim</button>
+</footer>
+
+<script>
+function send(){
+ const input=document.getElementById("message");
+ const chat=document.getElementById("chat");
+ const value=input.value.trim();
+
+ if(!value)return;
+
+ const user=document.createElement("div");
+ user.className="msg user";
+ user.textContent=value;
+ chat.appendChild(user);
+
+ const bot=document.createElement("div");
+ bot.className="msg bot";
+ bot.textContent="Pesan diterima! Penghubung AI belum dipasang.";
+ chat.appendChild(bot);
+
+ input.value="";
+ chat.scrollTop=chat.scrollHeight;
+}
+</script>
+
+</body>
+</html>
