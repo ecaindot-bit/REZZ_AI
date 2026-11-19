@@ -409,7 +409,57 @@
             .brand-text p {
                 display: none;
             }
-        }
+        }.thinking-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: rgba(124, 58, 237, 0.14);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  box-shadow: 0 0 18px rgba(99, 102, 241, 0.22);
+}
+
+.gemini-spark {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  animation: geminiSpinPulse 2.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.8));
+}
+
+.thinking-text {
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.35;
+  background: linear-gradient(90deg, #93c5fd, #c084fc, #60a5fa);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: textShimmer 2.4s linear infinite;
+}
+
+@keyframes geminiSpinPulse {
+  0% {
+    transform: rotate(0deg) scale(0.92);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.12);
+  }
+  100% {
+    transform: rotate(360deg) scale(0.92);
+  }
+}
+
+@keyframes textShimmer {
+  0% {
+    background-position: 0% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
     </style>
 </head>
 <body>
@@ -597,7 +647,27 @@ if (micBtn && userInput) {
             userInput.value = '';
             sendBtn.disabled = true;
 
-            const loadingDiv = addMessage("Sedang berpikir...", 'ai');
+            const loadingDiv = document.createElement('div');
+loadingDiv.className = 'message ai';
+loadingDiv.innerHTML = `
+  <div class="thinking-box">
+    <svg class="gemini-spark" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M12 2L14.6 9.4L22 12L14.6 14.6L12 22L9.4 14.6L2 12L9.4 9.4L12 2Z"
+        fill="url(#rezzSparkGrad)"
+      />
+      <defs>
+        <linearGradient id="rezzSparkGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#38bdf8" />
+          <stop offset="50%" stop-color="#a855f7" />
+          <stop offset="100%" stop-color="#ec4899" />
+        </linearGradient>
+      </defs>
+    </svg>
+    <span class="thinking-text">REZZ AI sedang merangkai jawaban...</span>
+  </div>
+`;
+messagesContainer.appendChild(loadingDiv);
             chatHistory.push({ role: "user", content: text });
 
             try {
