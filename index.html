@@ -401,7 +401,30 @@
             color: #475569;
             margin-top: 8px;
         }
+        /* --- STYLE TOMBOL COPY --- */
+.copy-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 0.75em;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
 
+.copy-btn:hover {
+    background: rgba(139, 92, 246, 0.2);
+    color: #cbd5e1;
+}
+
+.copy-btn.copied {
+    color: #10b981; /* Warna hijau saat berhasil disalin */
+}
         @media (max-width: 480px) {
             .cards-grid {
                 grid-template-columns: 1fr;
@@ -699,24 +722,50 @@ messagesContainer.appendChild(loadingDiv);
     const div = document.createElement('div');
     div.className = `message ${sender}`;
 
-    // --- LOGIKA PENGHAPUS BINTANG ---
+    // --- 1. LOGIKA PENGHAPUS BINTANG ---
     let cleanText = text;
     if (sender === 'ai') {
-        // 1. Ganti bintang di awal baris (list) menjadi titik tebal (•)
+        // Ganti bintang di awal baris jadi titik tebal (•)
         cleanText = cleanText.replace(/^\s*\*\s/gm, "• ");
-        
-        // 2. Hapus sisa tanda bintang (baik ** maupun *) agar tidak muncul di layar
+        // Hapus semua sisa tanda bintang (baik ** maupun *)
         cleanText = cleanText.replace(/\*/g, "");
     }
-    // --------------------------------
 
+    // Tampilkan teks yang sudah bersih
     const textNode = document.createTextNode(cleanText); 
     div.appendChild(textNode);
     
+    // Tampilkan waktu
     const timeSpan = document.createElement('span');
     timeSpan.className = 'time';
     timeSpan.innerText = getTime();
     div.appendChild(timeSpan);
+
+    // --- 2. LOGIKA TOMBOL SALIN (Hanya untuk AI) ---
+    if (sender === 'ai') {
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'copy-btn';
+        copyBtn.innerHTML = '📋 Salin';
+        
+        copyBtn.onclick = function() {
+            navigator.clipboard.writeText(cleanText).then(() => {
+                copyBtn.innerHTML = '✅ Tersalin!';
+                copyBtn.classList.add('copied');
+                
+                // Kembalikan teks tombol setelah 2 detik
+                setTimeout(() => {
+                    copyBtn.innerHTML = '📋 Salin';
+                    copyBtn.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Gagal menyalin: ', err);
+            });
+        };
+        
+        div.appendChild(copyBtn);
+    }
+    // ------------------------------------------
+
     messagesContainer.appendChild(div);
     chatBox.scrollTop = chatBox.scrollHeight;
     return div;
