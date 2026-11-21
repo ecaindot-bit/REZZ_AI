@@ -500,7 +500,11 @@
             font-family: 'Consolas', 'Courier New', monospace;
             font-size: 0.85em;
             color: #a6accd;
-        }
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+        
         /* Supaya teks biasa (bukan kode) tidak kena background hitam */
         .message p code {
             background: rgba(139, 92, 246, 0.2);
@@ -755,30 +759,62 @@ messagesContainer.appendChild(loadingDiv);
     }
 
     // --- 2. LOGIKA DETEKSI KODE & WARNA-WARNI ---
-    // Kita ubah teks biasa jadi HTML agar bisa dibaca Highlight.js
-    let formattedText = cleanText
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
+    // Pisahkan blok kode ```...``` dari teks biasa supaya baris kode (\n) tetap turun ke bawah
+    const parts = cleanText.split(/(```[\s\S]*?```)/g);
+    let formattedHtml = '';
 
-    // Deteksi blok kode markdown ```kode```
-    formattedText = formattedText.replace(/```([\s\S]*?)```/g, (match, code) => {
-        return `<pre><code class="language-html">${code.trim()}</code></pre>`;
+    parts.forEach((part) => {
+        if (!part) return;
+
+        const codeMatch = part.match(/^```([a-zA-Z0-9_-]*)\n?([\s\S]*?)```$/);
+        if (codeMatch) {
+            const lang = codeMatch[1] ? codeMatch[1].toLowerCase() : 'html';
+            const rawCode = codeMatch[2].replace(/\n+$/, '');
+            const escapedCode = rawCode
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+
+            formattedHtml += `
+                <div class="code-box" style="position: relative; margin: 10px 0;">
+                    <button type="button" class="copy-code-btn" style="position: sticky; top: 6px; float: right; z-index: 2; cursor: pointer;">📋 Salin Kode</button>
+                    <pre style="clear: both;"><code class="language-${lang}">${escapedCode}</code></pre>
+                </div>
+            `;
+        } else {
+            const escapedText = part
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/\n/g, '<br>');
+
+            formattedHtml += `<div class="ai-text">${escapedText}</div>`;
+        }
     });
 
-    // Deteksi baris baru (Enter)
-    formattedText = formattedText.replace(/\n/g, '<br>');
+    div.innerHTML = formattedHtml;
 
-    // Masukkan teks yang sudah diformat ke layar
-    div.innerHTML = formattedText; 
-    
-    // Jalankan Highlight.js untuk mewarnai kode
+    // Jalankan Highlight.js untuk mewarnai blok kode & pasang tombol salin khusus isi kode
     if (sender === 'ai') {
         div.querySelectorAll('pre code').forEach((block) => {
             hljs.highlightElement(block);
         });
+
+        div.querySelectorAll('.code-box').forEach((box) => {
+            const btn = box.querySelector('.copy-code-btn');
+            const codeEl = box.querySelector('pre code');
+            if (btn && codeEl) {
+                btn.onclick = function() {
+                    navigator.clipboard.writeText(codeEl.textContent).then(() => {
+                        btn.innerHTML = '✅ Tersalin';
+                        setTimeout(() => {
+                            btn.innerHTML = '📋 Salin Kode';
+                        }, 2000);
+                    });
+                };
+            }
+        });
     }
-    // ------------------------------------------
 
     // Tampilkan waktu
     const timeSpan = document.createElement('span');
@@ -786,12 +822,12 @@ messagesContainer.appendChild(loadingDiv);
     timeSpan.innerText = getTime();
     div.appendChild(timeSpan);
 
-    // --- 3. TOMBOL SALIN ---
-    if (sender === 'ai') {
+    // --- 3. TOMBOL SALIN PESAN (Jika tidak ada blok kode, salin cleanText) ---
+    if (sender === 'ai' && div.querySelectorAll('pre code').length === 0) {
         const copyBtn = document.createElement('button');
         copyBtn.className = 'copy-btn';
         copyBtn.innerHTML = '📋 Salin';
-        
+
         copyBtn.onclick = function() {
             navigator.clipboard.writeText(cleanText).then(() => {
                 copyBtn.innerHTML = '✅ Tersalin!';
@@ -808,7 +844,8 @@ messagesContainer.appendChild(loadingDiv);
     messagesContainer.appendChild(div);
     chatBox.scrollTop = chatBox.scrollHeight;
     return div;
-        }
+}
+
     </script>
 </body>
 </html>
