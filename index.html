@@ -722,26 +722,46 @@ messagesContainer.appendChild(loadingDiv);
     const div = document.createElement('div');
     div.className = `message ${sender}`;
 
-    // --- 1. LOGIKA PENGHAPUS BINTANG ---
+    // --- 1. LOGIKA PENGHAPUS BINTANG (Hanya untuk AI) ---
     let cleanText = text;
     if (sender === 'ai') {
-        // Ganti bintang di awal baris jadi titik tebal (•)
         cleanText = cleanText.replace(/^\s*\*\s/gm, "• ");
-        // Hapus semua sisa tanda bintang (baik ** maupun *)
         cleanText = cleanText.replace(/\*/g, "");
     }
 
-    // Tampilkan teks yang sudah bersih
-    const textNode = document.createTextNode(cleanText); 
-    div.appendChild(textNode);
+    // --- 2. LOGIKA DETEKSI KODE & WARNA-WARNI ---
+    // Kita ubah teks biasa jadi HTML agar bisa dibaca Highlight.js
+    let formattedText = cleanText
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+    // Deteksi blok kode markdown ```kode```
+    formattedText = formattedText.replace(/```([\s\S]*?)```/g, (match, code) => {
+        return `<pre><code class="language-html">${code.trim()}</code></pre>`;
+    });
+
+    // Deteksi baris baru (Enter)
+    formattedText = formattedText.replace(/\n/g, '<br>');
+
+    // Masukkan teks yang sudah diformat ke layar
+    div.innerHTML = formattedText; 
     
+    // Jalankan Highlight.js untuk mewarnai kode
+    if (sender === 'ai') {
+        div.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightElement(block);
+        });
+    }
+    // ------------------------------------------
+
     // Tampilkan waktu
     const timeSpan = document.createElement('span');
     timeSpan.className = 'time';
     timeSpan.innerText = getTime();
     div.appendChild(timeSpan);
 
-    // --- 2. LOGIKA TOMBOL SALIN (Hanya untuk AI) ---
+    // --- 3. TOMBOL SALIN ---
     if (sender === 'ai') {
         const copyBtn = document.createElement('button');
         copyBtn.className = 'copy-btn';
@@ -751,20 +771,14 @@ messagesContainer.appendChild(loadingDiv);
             navigator.clipboard.writeText(cleanText).then(() => {
                 copyBtn.innerHTML = '✅ Tersalin!';
                 copyBtn.classList.add('copied');
-                
-                // Kembalikan teks tombol setelah 2 detik
                 setTimeout(() => {
                     copyBtn.innerHTML = '📋 Salin';
                     copyBtn.classList.remove('copied');
                 }, 2000);
-            }).catch(err => {
-                console.error('Gagal menyalin: ', err);
             });
         };
-        
         div.appendChild(copyBtn);
     }
-    // ------------------------------------------
 
     messagesContainer.appendChild(div);
     chatBox.scrollTop = chatBox.scrollHeight;
