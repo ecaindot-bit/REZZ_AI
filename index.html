@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>REZZ AI - Asisten Pintar Masa Depan</title>
+        <!-- Tambahkan 2 baris ini untuk efek warna-warni -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
     <style>
         * {
             box-sizing: border-box;
@@ -483,6 +487,27 @@
     background-position: 200% center;
   }
 }
+                /* --- STYLE KOTAK KODE WARNA-WARNI --- */
+        pre {
+            background: #1e1e2e !important;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            overflow-x: auto;
+            margin: 8px 0;
+        }
+        code {
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.85em;
+            color: #a6accd;
+        }
+        /* Supaya teks biasa (bukan kode) tidak kena background hitam */
+        .message p code {
+            background: rgba(139, 92, 246, 0.2);
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
     </style>
 </head>
 <body>
