@@ -696,17 +696,30 @@ messagesContainer.appendChild(loadingDiv);
         }
 
         function addMessage(text, sender) {
-            const div = document.createElement('div');
-            div.className = `message ${sender}`;
-            const textNode = document.createTextNode(text);
-            div.appendChild(textNode);
-            const timeSpan = document.createElement('span');
-            timeSpan.className = 'time';
-            timeSpan.innerText = getTime();
-            div.appendChild(timeSpan);
-            messagesContainer.appendChild(div);
-            chatBox.scrollTop = chatBox.scrollHeight;
-            return div;
+    const div = document.createElement('div');
+    div.className = `message ${sender}`;
+
+    // --- LOGIKA PENGHAPUS BINTANG ---
+    let cleanText = text;
+    if (sender === 'ai') {
+        // 1. Ganti bintang di awal baris (list) menjadi titik tebal (•)
+        cleanText = cleanText.replace(/^\s*\*\s/gm, "• ");
+        
+        // 2. Hapus sisa tanda bintang (baik ** maupun *) agar tidak muncul di layar
+        cleanText = cleanText.replace(/\*/g, "");
+    }
+    // --------------------------------
+
+    const textNode = document.createTextNode(cleanText); 
+    div.appendChild(textNode);
+    
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'time';
+    timeSpan.innerText = getTime();
+    div.appendChild(timeSpan);
+    messagesContainer.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    return div;
         }
     </script>
 </body>
