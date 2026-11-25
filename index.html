@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>REZZ AI - Asisten Pintar Masa Depan</title>
-        <!-- Tambahkan 2 baris ini untuk efek warna-warni -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
@@ -17,9 +16,9 @@
 
         body {
             font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-            background: #0d0d1d;
-            background-image: radial-gradient(circle at 50% 35%, #161633 0%, #0a0a16 70%);
-            color: #ffffff;
+            background: #050a0e;
+            background-image: radial-gradient(circle at 50% 30%, #09222c 0%, #050a0e 72%);
+            color: #ecfeff;
             display: flex;
             flex-direction: column;
             height: 100vh;
@@ -29,13 +28,13 @@
 
         /* --- HEADER --- */
         header {
-            background: rgba(15, 15, 34, 0.9);
+            background: rgba(6, 15, 22, 0.92);
             backdrop-filter: blur(12px);
             padding: 14px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(139, 92, 246, 0.15);
+            border-bottom: 1px solid rgba(34, 211, 238, 0.18);
             z-index: 10;
         }
 
@@ -49,22 +48,23 @@
             width: 38px;
             height: 38px;
             border-radius: 10px;
-            background: linear-gradient(135deg, #4f46e5, #8b5cf6);
+            background: linear-gradient(135deg, #0891b2, #22d3ee);
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 800;
             font-size: 1.2em;
-            color: #fff;
-            box-shadow: 0 0 15px rgba(124, 58, 237, 0.45);
+            color: #041014;
+            box-shadow: 0 0 16px rgba(34, 211, 238, 0.45);
         }
 
         .brand-text h1 {
             font-size: 1.15em;
             font-weight: 800;
-            letter-spacing: 0.5px;
-            color: #93c5fd;
+            letter-spacing: 0.6px;
+            color: #67e8f9;
             line-height: 1.1;
+            text-shadow: 0 0 12px rgba(34, 211, 238, 0.25);
         }
 
         .brand-text p {
@@ -84,21 +84,21 @@
             align-items: center;
             gap: 6px;
             font-size: 0.78em;
-            color: #94a3b8;
+            color: #a5f3fc;
         }
 
         .status-dot {
             width: 7px;
             height: 7px;
             border-radius: 50%;
-            background: #10b981;
-            box-shadow: 0 0 8px #10b981;
+            background: #22d3ee;
+            box-shadow: 0 0 9px #22d3ee;
         }
 
         .trash-btn {
-            background: rgba(30, 29, 58, 0.8);
-            border: 1px solid rgba(139, 92, 246, 0.25);
-            color: #cbd5e1;
+            background: rgba(10, 28, 36, 0.85);
+            border: 1px solid rgba(34, 211, 238, 0.25);
+            color: #bae6fd;
             width: 36px;
             height: 36px;
             border-radius: 10px;
@@ -110,9 +110,9 @@
         }
 
         .trash-btn:hover {
-            background: rgba(239, 68, 68, 0.2);
-            border-color: rgba(239, 68, 68, 0.5);
-            color: #f87171;
+            background: rgba(239, 68, 68, 0.18);
+            border-color: rgba(248, 113, 113, 0.55);
+            color: #fca5a5;
         }
 
         /* --- MAIN AREA / CHAT BOX --- */
@@ -128,7 +128,7 @@
             width: 5px;
         }
         #chat-box::-webkit-scrollbar-thumb {
-            background: rgba(139, 92, 246, 0.35);
+            background: rgba(34, 211, 238, 0.35);
             border-radius: 10px;
         }
 
@@ -148,32 +148,33 @@
             width: 96px;
             height: 96px;
             border-radius: 26px;
-            background: rgba(45, 43, 85, 0.45);
-            border: 1px solid rgba(139, 92, 246, 0.25);
+            background: rgba(8, 47, 73, 0.45);
+            border: 1px solid rgba(34, 211, 238, 0.28);
             display: flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 22px;
-            box-shadow: 0 10px 30px rgba(79, 70, 229, 0.2);
+            box-shadow: 0 10px 30px rgba(6, 182, 212, 0.2);
         }
 
         .robot-inner {
             width: 72px;
             height: 72px;
             border-radius: 20px;
-            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            background: linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 2.3em;
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+            box-shadow: 0 0 22px rgba(34, 211, 238, 0.5);
         }
 
         #welcome-screen h2 {
             font-size: 1.65em;
             font-weight: 700;
-            color: #c7d2fe;
+            color: #a5f3fc;
             margin-bottom: 10px;
+            text-shadow: 0 0 14px rgba(34, 211, 238, 0.2);
         }
 
         #welcome-screen .subtitle {
@@ -188,7 +189,8 @@
             font-size: 0.72em;
             font-weight: 700;
             letter-spacing: 1.5px;
-            color: #64748b;
+            color: #22d3ee;
+            opacity: 0.75;
             text-transform: uppercase;
             margin-bottom: 14px;
         }
@@ -201,8 +203,8 @@
         }
 
         .prompt-card {
-            background: rgba(21, 21, 46, 0.85);
-            border: 1px solid rgba(139, 92, 246, 0.18);
+            background: rgba(8, 22, 30, 0.9);
+            border: 1px solid rgba(34, 211, 238, 0.18);
             border-radius: 14px;
             padding: 14px 16px;
             display: flex;
@@ -214,17 +216,18 @@
         }
 
         .prompt-card:hover {
-            background: rgba(34, 33, 72, 0.95);
-            border-color: rgba(139, 92, 246, 0.55);
+            background: rgba(11, 37, 48, 0.98);
+            border-color: rgba(34, 211, 238, 0.6);
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.2);
+            box-shadow: 0 6px 20px rgba(34, 211, 238, 0.18);
         }
 
         .card-icon {
             width: 34px;
             height: 34px;
             border-radius: 9px;
-            background: rgba(35, 35, 70, 0.9);
+            background: rgba(8, 51, 68, 0.75);
+            border: 1px solid rgba(34, 211, 238, 0.2);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -235,7 +238,7 @@
         .card-info h3 {
             font-size: 0.85em;
             font-weight: 600;
-            color: #f1f5f9;
+            color: #ecfeff;
             margin-bottom: 2px;
         }
 
@@ -272,17 +275,17 @@
 
         .time {
             font-size: 0.68em;
-            color: rgba(226, 232, 240, 0.6);
+            color: rgba(207, 250, 254, 0.65);
             margin-top: 5px;
             display: block;
         }
 
         .user {
-            background: linear-gradient(135deg, #3b82f6 0%, #7c3aed 100%);
-            color: #ffffff;
+            background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);
+            color: #f8fafc;
             align-self: flex-end;
             border-bottom-right-radius: 4px;
-            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+            box-shadow: 0 4px 16px rgba(6, 182, 212, 0.3);
         }
 
         .user .time {
@@ -290,40 +293,41 @@
         }
 
         .ai {
-            background: rgba(24, 24, 52, 0.9);
+            background: rgba(8, 22, 31, 0.92);
             color: #e2e8f0;
             align-self: flex-start;
             border-bottom-left-radius: 4px;
-            border: 1px solid rgba(139, 92, 246, 0.25);
+            border: 1px solid rgba(34, 211, 238, 0.24);
         }
 
         /* --- FOOTER & INPUT --- */
         .footer-wrapper {
             padding: 12px 18px 14px;
-            background: rgba(13, 13, 29, 0.95);
-            border-top: 1px solid rgba(139, 92, 246, 0.12);
+            background: rgba(5, 10, 14, 0.96);
+            border-top: 1px solid rgba(34, 211, 238, 0.14);
         }
 
         .input-box {
             max-width: 760px;
             margin: 0 auto;
-            background: #171732;
-            border: 1px solid rgba(139, 92, 246, 0.25);
+            background: #09161e;
+            border: 1px solid rgba(34, 211, 238, 0.25);
             border-radius: 16px;
             padding: 6px 8px 6px 16px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             transition: border-color 0.25s ease, box-shadow 0.25s ease;
         }
 
         .input-box:focus-within {
-            border-color: #6366f1;
-            box-shadow: 0 0 18px rgba(99, 102, 241, 0.25);
+            border-color: #22d3ee;
+            box-shadow: 0 0 18px rgba(34, 211, 238, 0.25);
         }
 
-        input {
+        input#user-input {
             flex: 1;
+            min-width: 0;
             background: transparent;
             border: none;
             color: #ffffff;
@@ -332,7 +336,7 @@
             padding: 8px 0;
         }
 
-        input::placeholder {
+        input#user-input::placeholder {
             color: #64748b;
         }
 
@@ -341,94 +345,92 @@
             height: 40px;
             border-radius: 12px;
             border: none;
-            background: linear-gradient(135deg, #4f46e5 0%, #8b5cf6 100%);
-            color: #ffffff;
+            background: linear-gradient(135deg, #0891b2 0%, #22d3ee 100%);
+            color: #041014;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             flex-shrink: 0;
-            box-shadow: 0 0 14px rgba(124, 58, 237, 0.45);
+            box-shadow: 0 0 15px rgba(34, 211, 238, 0.45);
             transition: all 0.2s ease;
         }
 
         button#send-btn:hover:not(:disabled) {
             transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.7);
+            box-shadow: 0 0 22px rgba(34, 211, 238, 0.72);
         }
 
         button#send-btn:disabled {
-            background: #2d2d52;
+            background: #132933;
+            color: #64748b;
             box-shadow: none;
-            opacity: 0.5;
+            opacity: 0.55;
             cursor: not-allowed;
         }
-.input-box {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
 
-.input-box #user-input {
-  flex: 1;
-  min-width: 0;
-}
+        #mic-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 38px;
+            height: 38px;
+            border: 1px solid rgba(34, 211, 238, 0.25);
+            border-radius: 50%;
+            background: rgba(34, 211, 238, 0.12);
+            color: #67e8f9;
+            cursor: pointer;
+            transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+        }
 
-#mic-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 38px;
-  height: 38px;
-  border: none;
-  border-radius: 50%;
-  background: rgba(139, 92, 246, 0.2);
-  color: #c4b5fd;
-  cursor: pointer;
-  transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease;
-}
+        #mic-btn:hover {
+            background: rgba(34, 211, 238, 0.24);
+            border-color: rgba(34, 211, 238, 0.5);
+        }
 
-#mic-btn:hover {
-  background: rgba(139, 92, 246, 0.35);
-}
+        #mic-btn.listening {
+            background: #06b6d4;
+            border-color: #a5f3fc;
+            color: #041014;
+            box-shadow: 0 0 16px rgba(34, 211, 238, 0.9);
+            transform: scale(1.06);
+        }
 
-#mic-btn.listening {
-  background: #7c3aed;
-  color: #ffffff;
-  box-shadow: 0 0 14px rgba(168, 85, 247, 0.85);
-  transform: scale(1.06);
-}
         .disclaimer {
             text-align: center;
             font-size: 0.68em;
             color: #475569;
             margin-top: 8px;
         }
+
         /* --- STYLE TOMBOL COPY --- */
-.copy-btn {
-    background: transparent;
-    border: none;
-    color: #94a3b8;
-    cursor: pointer;
-    font-size: 0.75em;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin-top: 8px;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-}
+        .copy-btn, .copy-code-btn {
+            background: rgba(8, 51, 68, 0.65);
+            border: 1px solid rgba(34, 211, 238, 0.25);
+            color: #a5f3fc;
+            cursor: pointer;
+            font-size: 0.75em;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 8px;
+            padding: 4px 9px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
 
-.copy-btn:hover {
-    background: rgba(139, 92, 246, 0.2);
-    color: #cbd5e1;
-}
+        .copy-btn:hover, .copy-code-btn:hover {
+            background: rgba(34, 211, 238, 0.2);
+            border-color: rgba(34, 211, 238, 0.55);
+            color: #ecfeff;
+        }
 
-.copy-btn.copied {
-    color: #10b981; /* Warna hijau saat berhasil disalin */
-}
+        .copy-btn.copied, .copy-code-btn.copied {
+            color: #22d3ee;
+            border-color: #22d3ee;
+        }
+
         @media (max-width: 480px) {
             .cards-grid {
                 grid-template-columns: 1fr;
@@ -436,82 +438,83 @@
             .brand-text p {
                 display: none;
             }
-        }.thinking-box {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: 16px;
-  background: rgba(124, 58, 237, 0.14);
-  border: 1px solid rgba(168, 85, 247, 0.35);
-  box-shadow: 0 0 18px rgba(99, 102, 241, 0.22);
-}
+        }
 
-.gemini-spark {
-  width: 22px;
-  height: 22px;
-  flex-shrink: 0;
-  animation: geminiSpinPulse 2.2s ease-in-out infinite;
-  filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.8));
-}
+        .thinking-box {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 16px;
+            background: rgba(6, 182, 212, 0.12);
+            border: 1px solid rgba(34, 211, 238, 0.35);
+            box-shadow: 0 0 18px rgba(34, 211, 238, 0.2);
+        }
 
-.thinking-text {
-  font-size: 0.95rem;
-  font-weight: 500;
-  line-height: 1.35;
-  background: linear-gradient(90deg, #93c5fd, #c084fc, #60a5fa);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: textShimmer 2.4s linear infinite;
-}
+        .gemini-spark {
+            width: 22px;
+            height: 22px;
+            flex-shrink: 0;
+            animation: geminiSpinPulse 2.2s ease-in-out infinite;
+            filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.85));
+        }
 
-@keyframes geminiSpinPulse {
-  0% {
-    transform: rotate(0deg) scale(0.92);
-  }
-  50% {
-    transform: rotate(180deg) scale(1.12);
-  }
-  100% {
-    transform: rotate(360deg) scale(0.92);
-  }
-}
+        .thinking-text {
+            font-size: 0.95rem;
+            font-weight: 500;
+            line-height: 1.35;
+            background: linear-gradient(90deg, #67e8f9, #22d3ee, #38bdf8);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: textShimmer 2.4s linear infinite;
+        }
 
-@keyframes textShimmer {
-  0% {
-    background-position: 0% center;
-  }
-  100% {
-    background-position: 200% center;
-  }
-}
-                /* --- STYLE KOTAK KODE WARNA-WARNI --- */
+        @keyframes geminiSpinPulse {
+            0% {
+                transform: rotate(0deg) scale(0.92);
+            }
+            50% {
+                transform: rotate(180deg) scale(1.12);
+            }
+            100% {
+                transform: rotate(360deg) scale(0.92);
+            }
+        }
+
+        @keyframes textShimmer {
+            0% {
+                background-position: 0% center;
+            }
+            100% {
+                background-position: 200% center;
+            }
+        }
+
+        /* --- STYLE KOTAK KODE WARNA-WARNI --- */
         pre {
             background: #1e1e2e !important;
-            border: 1px solid rgba(139, 92, 246, 0.3);
+            border: 1px solid rgba(34, 211, 238, 0.3);
             border-radius: 8px;
             padding: 12px;
             overflow-x: auto;
             margin: 8px 0;
         }
+
         code {
             font-family: 'Consolas', 'Courier New', monospace;
             font-size: 0.85em;
             color: #a6accd;
-    white-space: pre-wrap;
-    word-break: break-word;
-}
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
 
-        
-        /* Supaya teks biasa (bukan kode) tidak kena background hitam */
         .message p code {
-            background: rgba(139, 92, 246, 0.2);
+            background: rgba(34, 211, 238, 0.16);
             padding: 2px 5px;
             border-radius: 4px;
         }
-
     </style>
 </head>
 <body>
@@ -587,17 +590,17 @@
 
     <div class="footer-wrapper">
         <div class="input-box">
-          <input type="text" id="user-input" placeholder="Tanyakan sesuatu kepada REZZ AI..." onkeypress="if(event.key==='Enter') sendMessage()">
-          <button id="mic-btn" type="button" title="Bicara" aria-label="Bicara">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/>
-            </svg>
-          </button>
-          <button id="send-btn" onclick="sendMessage()" title="Kirim">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-            </svg>
-          </button>
+            <input type="text" id="user-input" placeholder="Tanyakan sesuatu kepada REZZ AI..." onkeypress="if(event.key==='Enter') sendMessage()">
+            <button id="mic-btn" type="button" title="Bicara" aria-label="Bicara">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/>
+                </svg>
+            </button>
+            <button id="send-btn" onclick="sendMessage()" title="Kirim">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                </svg>
+            </button>
         </div>
         <div class="disclaimer">REZZ AI dapat membuat kesalahan. Periksa informasi penting.</div>
     </div>
@@ -620,70 +623,130 @@
             welcomeScreen.style.display = 'flex';
             chatHistory = [];
         }
-const micBtn = document.getElementById('mic-btn');
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-const defaultPlaceholder = userInput ? userInput.placeholder : 'Tanyakan sesuatu kepada REZZ AI...';
 
-if (micBtn && userInput) {
-  if (!SpeechRecognition) {
-    micBtn.addEventListener('click', () => {
-      userInput.placeholder = 'Browser ini tidak mendukung voice-to-text (coba Chrome HTTPS)';
-    });
-  } else {
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'id-ID';
-    recognition.interimResults = true;
-    recognition.continuous = false;
+        // --- VOICE TO TEXT (LEBIH STABIL & ANTI TERPUTUS) ---
+        const micBtn = document.getElementById('mic-btn');
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const defaultPlaceholder = userInput ? userInput.placeholder : 'Tanyakan sesuatu kepada REZZ AI...';
 
-    let isListening = false;
+        if (micBtn && userInput) {
+            if (!SpeechRecognition) {
+                micBtn.addEventListener('click', () => {
+                    userInput.placeholder = 'Browser ini tidak mendukung voice-to-text (coba Chrome HTTPS)';
+                });
+            } else {
+                const recognition = new SpeechRecognition();
+                recognition.lang = 'id-ID';
+                recognition.interimResults = true;
+                recognition.continuous = true;
+                recognition.maxAlternatives = 1;
 
-    micBtn.addEventListener('click', () => {
-      try {
-        if (isListening) {
-          recognition.stop();
-        } else {
-          recognition.start();
+                let isListening = false;
+                let manualStop = false;
+                let finalTranscript = '';
+                let baseInputBeforeMic = '';
+                let restartTimer = null;
+
+                function cleanupMicState(resetPlace = true) {
+                    clearTimeout(restartTimer);
+                    isListening = false;
+                    micBtn.classList.remove('listening');
+                    if (resetPlace && userInput.placeholder === 'Mendengarkan suara...') {
+                        userInput.placeholder = defaultPlaceholder;
+                    }
+                }
+
+                micBtn.addEventListener('click', () => {
+                    if (isListening) {
+                        manualStop = true;
+                        cleanupMicState(true);
+                        try {
+                            recognition.stop();
+                        } catch (_) {}
+                        userInput.focus();
+                        return;
+                    }
+
+                    manualStop = false;
+                    finalTranscript = '';
+                    baseInputBeforeMic = userInput.value.trim();
+
+                    try {
+                        recognition.start();
+                    } catch (_) {
+                        cleanupMicState(false);
+                        userInput.placeholder = 'Gagal memulai mic. Pastikan pakai HTTPS & izinkan mikrofon.';
+                    }
+                });
+
+                recognition.onstart = () => {
+                    clearTimeout(restartTimer);
+                    isListening = true;
+                    micBtn.classList.add('listening');
+                    userInput.placeholder = 'Mendengarkan suara...';
+                };
+
+                recognition.onresult = (event) => {
+                    let interimTranscript = '';
+
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const piece = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            finalTranscript += piece + ' ';
+                        } else {
+                            interimTranscript += piece;
+                        }
+                    }
+
+                    const combinedSpeech = (finalTranscript + interimTranscript)
+                        .replace(/\s+/g, ' ')
+                        .trim();
+
+                    userInput.value = baseInputBeforeMic
+                        ? (combinedSpeech ? `${baseInputBeforeMic} ${combinedSpeech}` : baseInputBeforeMic)
+                        : combinedSpeech;
+                };
+
+                recognition.onerror = (event) => {
+                    // 'no-speech' sering terjadi saat jeda sebentar; biarkan onend menyambung ulang jika belum dihentikan manual
+                    if (event.error === 'no-speech' && !manualStop) {
+                        return;
+                    }
+
+                    manualStop = true;
+                    cleanupMicState(false);
+
+                    if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                        userInput.placeholder = 'Izin mic ditolak/diblokir. Aktifkan di setelan situs browser.';
+                    } else if (event.error === 'audio-capture') {
+                        userInput.placeholder = 'Mikrofon tidak terdeteksi atau sedang dipakai aplikasi lain.';
+                    } else if (event.error === 'network') {
+                        userInput.placeholder = 'Koneksi suara terganggu. Cek jaringan / HTTPS.';
+                    } else {
+                        userInput.placeholder = 'Error mic: ' + event.error;
+                    }
+                };
+
+                recognition.onend = () => {
+                    if (!manualStop && isListening) {
+                        clearTimeout(restartTimer);
+                        restartTimer = setTimeout(() => {
+                            if (!manualStop && isListening) {
+                                try {
+                                    recognition.start();
+                                } catch (_) {
+                                    cleanupMicState(true);
+                                }
+                            }
+                        }, 120);
+                        return;
+                    }
+
+                    cleanupMicState(true);
+                };
+            }
         }
-      } catch (err) {
-        isListening = false;
-        micBtn.classList.remove('listening');
-        userInput.placeholder = 'Gagal memulai mic. Pastikan pakai HTTPS & izinkan mikrofon.';
-      }
-    });
 
-    recognition.onstart = () => {
-      isListening = true;
-      micBtn.classList.add('listening');
-      userInput.placeholder = 'Mendengarkan suara...';
-    };
-
-    recognition.onresult = (event) => {
-      let transcript = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        transcript += event.results[i][0].transcript;
-      }
-      userInput.value = transcript;
-    };
-
-    recognition.onerror = (event) => {
-      isListening = false;
-      micBtn.classList.remove('listening');
-      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-        userInput.placeholder = 'Izin mic ditolak/diblokir. Aktifkan di setelan situs browser.';
-      } else {
-        userInput.placeholder = 'Error mic: ' + event.error + ' (cek koneksi / HTTPS)';
-      }
-    };
-
-    recognition.onend = () => {
-      isListening = false;
-      micBtn.classList.remove('listening');
-      if (userInput.placeholder === 'Mendengarkan suara...') {
-        userInput.placeholder = defaultPlaceholder;
-      }
-    };
-  }
-           }
         function quickSend(promptText) {
             userInput.value = promptText;
             sendMessage();
@@ -700,26 +763,27 @@ if (micBtn && userInput) {
             sendBtn.disabled = true;
 
             const loadingDiv = document.createElement('div');
-loadingDiv.className = 'message ai';
-loadingDiv.innerHTML = `
-  <div class="thinking-box">
-    <svg class="gemini-spark" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M12 2L14.6 9.4L22 12L14.6 14.6L12 22L9.4 14.6L2 12L9.4 9.4L12 2Z"
-        fill="url(#rezzSparkGrad)"
-      />
-      <defs>
-        <linearGradient id="rezzSparkGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#38bdf8" />
-          <stop offset="50%" stop-color="#a855f7" />
-          <stop offset="100%" stop-color="#ec4899" />
-        </linearGradient>
-      </defs>
-    </svg>
-    <span class="thinking-text">REZZ AI sedang merangkai jawaban...</span>
-  </div>
-`;
-messagesContainer.appendChild(loadingDiv);
+            loadingDiv.className = 'message ai';
+            loadingDiv.innerHTML = `
+                <div class="thinking-box">
+                    <svg class="gemini-spark" viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M12 2L14.6 9.4L22 12L14.6 14.6L12 22L9.4 14.6L2 12L9.4 9.4L12 2Z"
+                            fill="url(#rezzSparkGrad)"
+                        />
+                        <defs>
+                            <linearGradient id="rezzSparkGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#22d3ee" />
+                                <stop offset="50%" stop-color="#38bdf8" />
+                                <stop offset="100%" stop-color="#a5f3fc" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <span class="thinking-text">REZZ AI sedang merangkai jawaban...</span>
+                </div>
+            `;
+            messagesContainer.appendChild(loadingDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
             chatHistory.push({ role: "user", content: text });
 
             try {
@@ -729,123 +793,138 @@ messagesContainer.appendChild(loadingDiv);
                     body: JSON.stringify({ messages: chatHistory })
                 });
 
-                const data = await response.json();
+                const rawResponse = await response.text();
+                let data = null;
+                try {
+                    data = JSON.parse(rawResponse);
+                } catch (_) {
+                    data = null;
+                }
+
                 messagesContainer.removeChild(loadingDiv);
 
-                if (data.reply) {
+                if (data && data.reply) {
                     addMessage(data.reply, 'ai');
                     chatHistory.push({ role: "assistant", content: data.reply });
+                } else if (data && data.error) {
+                    addMessage("Error: " + data.error, 'ai');
                 } else {
-                    addMessage("Error: " + (data.error || "Gagal mendapat balasan"), 'ai');
+                    addMessage("Error server (" + response.status + "): respons tidak valid.", 'ai');
                 }
             } catch (error) {
-                messagesContainer.removeChild(loadingDiv);
+                if (loadingDiv.parentNode === messagesContainer) {
+                    messagesContainer.removeChild(loadingDiv);
+                }
                 addMessage("Error koneksi ke server REZZ AI.", 'ai');
             }
-            
+
             sendBtn.disabled = false;
             userInput.focus();
         }
 
-        function addMessage(text, sender) {
-    const div = document.createElement('div');
-    div.className = `message ${sender}`;
-
-    // --- 1. LOGIKA PENGHAPUS BINTANG (Hanya untuk AI) ---
-    let cleanText = text;
-    if (sender === 'ai') {
-        cleanText = cleanText.replace(/^\s*\*\s/gm, "• ");
-        cleanText = cleanText.replace(/\*/g, "");
-    }
-
-    // --- 2. LOGIKA DETEKSI KODE & WARNA-WARNI ---
-    // Pisahkan blok kode ```...``` dari teks biasa supaya baris kode (\n) tetap turun ke bawah
-    const parts = cleanText.split(/(```[\s\S]*?```)/g);
-    let formattedHtml = '';
-
-    parts.forEach((part) => {
-        if (!part) return;
-
-        const codeMatch = part.match(/^```([a-zA-Z0-9_-]*)\n?([\s\S]*?)```$/);
-        if (codeMatch) {
-            const lang = codeMatch[1] ? codeMatch[1].toLowerCase() : 'html';
-            const rawCode = codeMatch[2].replace(/\n+$/, '');
-            const escapedCode = rawCode
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;");
-
-            formattedHtml += `
-                <div class="code-box" style="position: relative; margin: 10px 0;">
-                    <button type="button" class="copy-code-btn" style="position: sticky; top: 6px; float: right; z-index: 2; cursor: pointer;">📋 Salin Kode</button>
-                    <pre style="clear: both;"><code class="language-${lang}">${escapedCode}</code></pre>
-                </div>
-            `;
-        } else {
-            const escapedText = part
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/\n/g, '<br>');
-
-            formattedHtml += `<div class="ai-text">${escapedText}</div>`;
+        // Hapus bintang hanya pada bagian teks biasa, biarkan blok kode tetap utuh
+        function stripStarsFromPlainText(str) {
+            return str
+                .replace(/^\s*\*\s/gm, "• ")
+                .replace(/\*/g, "");
         }
-    });
 
-    div.innerHTML = formattedHtml;
+        function addMessage(text, sender) {
+            const div = document.createElement('div');
+            div.className = `message ${sender}`;
 
-    // Jalankan Highlight.js untuk mewarnai blok kode & pasang tombol salin khusus isi kode
-    if (sender === 'ai') {
-        div.querySelectorAll('pre code').forEach((block) => {
-            hljs.highlightElement(block);
-        });
+            // Pisahkan blok kode ```...``` dari teks biasa terlebih dahulu
+            const parts = text.split(/(```[\s\S]*?```)/g);
+            let formattedHtml = '';
+            const plainPartsForCopy = [];
 
-        div.querySelectorAll('.code-box').forEach((box) => {
-            const btn = box.querySelector('.copy-code-btn');
-            const codeEl = box.querySelector('pre code');
-            if (btn && codeEl) {
-                btn.onclick = function() {
-                    navigator.clipboard.writeText(codeEl.textContent).then(() => {
-                        btn.innerHTML = '✅ Tersalin';
+            parts.forEach((part) => {
+                if (!part) return;
+
+                const codeMatch = part.match(/^```([a-zA-Z0-9_-]*)\n?([\s\S]*?)```$/);
+                if (codeMatch) {
+                    const lang = codeMatch[1] ? codeMatch[1].toLowerCase() : 'html';
+                    const rawCode = codeMatch[2].replace(/\n+$/, '');
+                    plainPartsForCopy.push(rawCode);
+
+                    const escapedCode = rawCode
+                        .replace(/&/g, "&amp;")
+                        .replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;");
+
+                    formattedHtml += `
+                        <div class="code-box" style="position: relative; margin: 10px 0;">
+                            <button type="button" class="copy-code-btn" style="position: sticky; top: 6px; float: right; z-index: 2; cursor: pointer;">📋 Salin Kode</button>
+                            <pre style="clear: both;"><code class="language-${lang}">${escapedCode}</code></pre>
+                        </div>
+                    `;
+                } else {
+                    const cleanedPart = sender === 'ai' ? stripStarsFromPlainText(part) : part;
+                    plainPartsForCopy.push(cleanedPart);
+
+                    const escapedText = cleanedPart
+                        .replace(/&/g, "&amp;")
+                        .replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;")
+                        .replace(/\n/g, '<br>');
+
+                    formattedHtml += `<div class="ai-text">${escapedText}</div>`;
+                }
+            });
+
+            div.innerHTML = formattedHtml;
+
+            if (sender === 'ai') {
+                div.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                });
+
+                div.querySelectorAll('.code-box').forEach((box) => {
+                    const btn = box.querySelector('.copy-code-btn');
+                    const codeEl = box.querySelector('pre code');
+                    if (btn && codeEl) {
+                        btn.onclick = function() {
+                            navigator.clipboard.writeText(codeEl.textContent).then(() => {
+                                btn.innerHTML = '✅ Tersalin';
+                                btn.classList.add('copied');
+                                setTimeout(() => {
+                                    btn.innerHTML = '📋 Salin Kode';
+                                    btn.classList.remove('copied');
+                                }, 2000);
+                            });
+                        };
+                    }
+                });
+            }
+
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'time';
+            timeSpan.innerText = getTime();
+            div.appendChild(timeSpan);
+
+            const copyTextPayload = plainPartsForCopy.join('\n').trim();
+            if (sender === 'ai' && div.querySelectorAll('pre code').length === 0) {
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'copy-btn';
+                copyBtn.innerHTML = '📋 Salin';
+
+                copyBtn.onclick = function() {
+                    navigator.clipboard.writeText(copyTextPayload).then(() => {
+                        copyBtn.innerHTML = '✅ Tersalin!';
+                        copyBtn.classList.add('copied');
                         setTimeout(() => {
-                            btn.innerHTML = '📋 Salin Kode';
+                            copyBtn.innerHTML = '📋 Salin';
+                            copyBtn.classList.remove('copied');
                         }, 2000);
                     });
                 };
+                div.appendChild(copyBtn);
             }
-        });
-    }
 
-    // Tampilkan waktu
-    const timeSpan = document.createElement('span');
-    timeSpan.className = 'time';
-    timeSpan.innerText = getTime();
-    div.appendChild(timeSpan);
-
-    // --- 3. TOMBOL SALIN PESAN (Jika tidak ada blok kode, salin cleanText) ---
-    if (sender === 'ai' && div.querySelectorAll('pre code').length === 0) {
-        const copyBtn = document.createElement('button');
-        copyBtn.className = 'copy-btn';
-        copyBtn.innerHTML = '📋 Salin';
-
-        copyBtn.onclick = function() {
-            navigator.clipboard.writeText(cleanText).then(() => {
-                copyBtn.innerHTML = '✅ Tersalin!';
-                copyBtn.classList.add('copied');
-                setTimeout(() => {
-                    copyBtn.innerHTML = '📋 Salin';
-                    copyBtn.classList.remove('copied');
-                }, 2000);
-            });
-        };
-        div.appendChild(copyBtn);
-    }
-
-    messagesContainer.appendChild(div);
-    chatBox.scrollTop = chatBox.scrollHeight;
-    return div;
-}
-
+            messagesContainer.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            return div;
+        }
     </script>
 </body>
 </html>
