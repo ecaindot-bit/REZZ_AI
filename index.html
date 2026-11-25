@@ -424,8 +424,8 @@
       width: 100%;
     }
 
-    /* TOMBOL PASTE DI POJOK KANAN ATAS */
-    .top-paste-btn {
+    /* TOMBOL SALIN DI POJOK KANAN ATAS */
+    .top-copy-btn {
       position: sticky;
       top: 0;
       float: right;
@@ -442,8 +442,8 @@
       transition: background 0.15s ease, transform 0.15s ease;
     }
 
-    .top-paste-btn:hover,
-    .top-paste-btn:active {
+    .top-copy-btn:hover,
+    .top-copy-btn:active {
       background: rgba(34, 211, 238, 0.25);
       transform: scale(0.97);
     }
@@ -508,17 +508,10 @@
     .msg-bubble code {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     }
-    .code-action-group {
+    .copy-code-btn {
       position: absolute;
       top: 6px;
       right: 8px;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      z-index: 4;
-    }
-    .copy-code-btn,
-    .paste-code-btn {
       background: rgba(34, 211, 238, 0.14);
       border: 1px solid rgba(34, 211, 238, 0.35);
       color: var(--cyan);
@@ -528,8 +521,7 @@
       font-weight: 600;
       cursor: pointer;
     }
-    .copy-code-btn:active,
-    .paste-code-btn:active {
+    .copy-code-btn:active {
       background: rgba(34, 211, 238, 0.28);
     }
 
@@ -1492,39 +1484,26 @@
       });
     }
 
-    // --- PASTE HELPER & SEPARASI TEKS / KODE ---
-    function insertTextToInput(value) {
-      if (!value) return;
-      const start = messageInput.selectionStart ?? messageInput.value.length;
-      const end = messageInput.selectionEnd ?? messageInput.value.length;
-      messageInput.value =
-        messageInput.value.slice(0, start) +
-        value +
-        messageInput.value.slice(end);
-      const nextPos = start + value.length;
-      messageInput.focus();
-      messageInput.setSelectionRange(nextPos, nextPos);
-      autoResizeInput();
-    }
-
-    async function readClipboardTextSafe() {
-      if (navigator.clipboard && navigator.clipboard.readText) {
+    // --- SALIN HELPER & SEPARASI TEKS / KODE ---
+    async function copyToClipboardSafe(text) {
+      if (!text) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
         try {
-          return await navigator.clipboard.readText();
+          await navigator.clipboard.writeText(text);
+          return;
         } catch (_) {}
       }
       const temp = document.createElement("textarea");
+      temp.value = text;
       temp.style.position = "fixed";
       temp.style.opacity = "0";
       document.body.appendChild(temp);
       temp.focus();
-      let pasted = "";
+      temp.select();
       try {
-        document.execCommand("paste");
-        pasted = temp.value || "";
+        document.execCommand("copy");
       } catch (_) {}
       temp.remove();
-      return pasted;
     }
 
     function splitTextAndCode(rawText) {
@@ -1603,50 +1582,35 @@
             hljs.highlightElement(codeEl);
           }
 
-          const actionGroup = document.createElement("div");
-          actionGroup.className = "code-action-group";
-
+          // Salin khusus isi blok kode ini saja (kata pembuka/penutup AI tidak ikut)
           const copyBtn = document.createElement("button");
           copyBtn.type = "button";
           copyBtn.className = "copy-code-btn";
           copyBtn.textContent = "Salin";
-          copyBtn.onclick = () => {
-            navigator.clipboard?.writeText(seg.content).catch(() => {});
+          copyBtn.onclick = async () => {
+            await copyToClipboardSafe(seg.content);
             copyBtn.textContent = "Tersalin!";
             setTimeout(() => (copyBtn.textContent = "Salin"), 1500);
           };
 
-          // Paste khusus blok kode ini saja (kata pembuka/penutup AI tidak ikut)
-          const pasteCodeBtn = document.createElement("button");
-          pasteCodeBtn.type = "button";
-          pasteCodeBtn.className = "paste-code-btn";
-          pasteCodeBtn.textContent = "Paste Kode";
-          pasteCodeBtn.onclick = () => {
-            insertTextToInput(seg.content);
-            pasteCodeBtn.textContent = "Tertempel!";
-            setTimeout(() => (pasteCodeBtn.textContent = "Paste Kode"), 1500);
-          };
-
-          actionGroup.appendChild(copyBtn);
-          actionGroup.appendChild(pasteCodeBtn);
-          pre.appendChild(actionGroup);
+          pre.appendChild(copyBtn);
           container.appendChild(pre);
         }
       });
 
-      // Tombol paste sekali ketuk di pojok kanan atas teks biasa (jika ada teks non-kode)
+      // Tombol Salin sekali ketuk di pojok kanan atas teks biasa (tanpa blok kode)
       if (prosePartsOnly) {
-        const pasteTextBtn = document.createElement("button");
-        pasteTextBtn.type = "button";
-        pasteTextBtn.className = "top-paste-btn";
-        pasteTextBtn.textContent = "Paste";
-        pasteTextBtn.title = "Tempel teks biasa saja (tanpa blok kode)";
-        pasteTextBtn.onclick = () => {
-          insertTextToInput(prosePartsOnly);
-          pasteTextBtn.textContent = "Tertempel!";
-          setTimeout(() => (pasteTextBtn.textContent = "Paste"), 1500);
+        const copyTextBtn = document.createElement("button");
+        copyTextBtn.type = "button";
+        copyTextBtn.className = "top-copy-btn";
+        copyTextBtn.textContent = "Salin";
+        copyTextBtn.title = "Salin teks biasa saja (tanpa blok kode)";
+        copyTextBtn.onclick = async () => {
+          await copyToClipboardSafe(prosePartsOnly);
+          copyTextBtn.textContent = "Tersalin!";
+          setTimeout(() => (copyTextBtn.textContent = "Salin"), 1500);
         };
-        container.prepend(pasteTextBtn);
+        container.prepend(copyTextBtn);
       }
     }
 
@@ -1657,25 +1621,18 @@
       const bubble = document.createElement("div");
       bubble.className = "msg-bubble";
 
-      if (msg.role === "user") {
-        const pasteUserBtn = document.createElement("button");
-        pasteUserBtn.type = "button";
-        pasteUserBtn.className = "top-paste-btn";
-        pasteUserBtn.textContent = "Paste";
-        pasteUserBtn.title = "Tempel ke kolom ketik";
-        pasteUserBtn.onclick = async () => {
-          const clipText = await readClipboardTextSafe();
-          if (clipText) {
-            insertTextToInput(clipText);
-            pasteUserBtn.textContent = "Tertempel!";
-            setTimeout(() => (pasteUserBtn.textContent = "Paste"), 1500);
-          } else if (msg.content) {
-            insertTextToInput(msg.content);
-            pasteUserBtn.textContent = "Tertempel!";
-            setTimeout(() => (pasteUserBtn.textContent = "Paste"), 1500);
-          }
+      if (msg.role === "user" && msg.content) {
+        const copyUserBtn = document.createElement("button");
+        copyUserBtn.type = "button";
+        copyUserBtn.className = "top-copy-btn";
+        copyUserBtn.textContent = "Salin";
+        copyUserBtn.title = "Salin teks pesan";
+        copyUserBtn.onclick = async () => {
+          await copyToClipboardSafe(msg.content);
+          copyUserBtn.textContent = "Tersalin!";
+          setTimeout(() => (copyUserBtn.textContent = "Salin"), 1500);
         };
-        bubble.appendChild(pasteUserBtn);
+        bubble.appendChild(copyUserBtn);
       }
 
       if (Array.isArray(msg.attachmentsMeta) && msg.attachmentsMeta.length > 0) {
