@@ -400,6 +400,7 @@
     }
 
     .msg-bubble {
+      position: relative;
       padding: 11px 14px;
       border-radius: 16px;
       font-size: 14px;
@@ -421,6 +422,30 @@
       color: var(--text-main);
       border-bottom-left-radius: 4px;
       width: 100%;
+    }
+
+    /* TOMBOL PASTE DI POJOK KANAN ATAS */
+    .top-paste-btn {
+      position: sticky;
+      top: 0;
+      float: right;
+      margin: 0 0 6px 10px;
+      background: rgba(34, 211, 238, 0.14);
+      border: 1px solid rgba(34, 211, 238, 0.38);
+      color: var(--cyan);
+      border-radius: 7px;
+      padding: 3px 9px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      z-index: 5;
+      transition: background 0.15s ease, transform 0.15s ease;
+    }
+
+    .top-paste-btn:hover,
+    .top-paste-btn:active {
+      background: rgba(34, 211, 238, 0.25);
+      transform: scale(0.97);
     }
 
     .msg-attachments {
@@ -451,7 +476,15 @@
       color: var(--cyan);
     }
 
-    /* MARKDOWN & CODE BLOCKS */
+    /* SEGMEN TEKS BIASA & BLOK KODE TERPISAH */
+    .msg-prose-segment {
+      margin-bottom: 8px;
+    }
+
+    .msg-prose-segment:last-child {
+      margin-bottom: 0;
+    }
+
     .msg-bubble p {
       margin-bottom: 8px;
     }
@@ -467,25 +500,37 @@
       background: #070d12;
       border: 1px solid rgba(34, 211, 238, 0.25);
       border-radius: 10px;
-      padding: 32px 12px 12px;
-      margin: 10px 0;
+      padding: 34px 12px 12px;
+      margin: 8px 0;
       overflow-x: auto;
       font-size: 12.5px;
     }
     .msg-bubble code {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     }
-    .copy-code-btn {
+    .code-action-group {
       position: absolute;
       top: 6px;
       right: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      z-index: 4;
+    }
+    .copy-code-btn,
+    .paste-code-btn {
       background: rgba(34, 211, 238, 0.14);
       border: 1px solid rgba(34, 211, 238, 0.35);
       color: var(--cyan);
       border-radius: 6px;
       padding: 3px 8px;
       font-size: 11px;
+      font-weight: 600;
       cursor: pointer;
+    }
+    .copy-code-btn:active,
+    .paste-code-btn:active {
+      background: rgba(34, 211, 238, 0.28);
     }
 
     /* LOADING DOTS */
@@ -1447,7 +1492,75 @@
       });
     }
 
-    // --- RENDER CHAT ---
+    // --- PASTE HELPER & SEPARASI TEKS / KODE ---
+    function insertTextToInput(value) {
+      if (!value) return;
+      const start = messageInput.selectionStart ?? messageInput.value.length;
+      const end = messageInput.selectionEnd ?? messageInput.value.length;
+      messageInput.value =
+        messageInput.value.slice(0, start) +
+        value +
+        messageInput.value.slice(end);
+      const nextPos = start + value.length;
+      messageInput.focus();
+      messageInput.setSelectionRange(nextPos, nextPos);
+      autoResizeInput();
+    }
+
+    async function readClipboardTextSafe() {
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        try {
+          return await navigator.clipboard.readText();
+        } catch (_) {}
+      }
+      const temp = document.createElement("textarea");
+      temp.style.position = "fixed";
+      temp.style.opacity = "0";
+      document.body.appendChild(temp);
+      temp.focus();
+      let pasted = "";
+      try {
+        document.execCommand("paste");
+        pasted = temp.value || "";
+      } catch (_) {}
+      temp.remove();
+      return pasted;
+    }
+
+    function splitTextAndCode(rawText) {
+      const text = String(rawText || "");
+      const fenceRegex = /```([a-zA-Z0-9_-]*)\n?([\s\S]*?)```/g;
+      const segments = [];
+      let lastIndex = 0;
+      let match;
+
+      while ((match = fenceRegex.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+          const prose = text.slice(lastIndex, match.index).trim();
+          if (prose) {
+            segments.push({ type: "prose", content: prose });
+          }
+        }
+        const lang = (match[1] || "").trim();
+        const code = (match[2] || "").replace(/\n+$/, "");
+        segments.push({ type: "code", lang, content: code });
+        lastIndex = fenceRegex.lastIndex;
+      }
+
+      if (lastIndex < text.length) {
+        const trailing = text.slice(lastIndex).trim();
+        if (trailing) {
+          segments.push({ type: "prose", content: trailing });
+        }
+      }
+
+      if (segments.length === 0 && text.trim()) {
+        segments.push({ type: "prose", content: text.trim() });
+      }
+
+      return segments;
+    }
+
     function escapeHtml(str) {
       return String(str)
         .replace(/&/g, "&amp;")
@@ -1463,25 +1576,78 @@
       return `<p>${escapeHtml(text || "").replace(/\n/g, "<br>")}</p>`;
     }
 
-    function enhanceCodeBlocks(container) {
-      container.querySelectorAll("pre code").forEach((block) => {
-        if (window.hljs) {
-          hljs.highlightElement(block);
-        }
-        const pre = block.parentElement;
-        if (pre && !pre.querySelector(".copy-code-btn")) {
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "copy-code-btn";
-          btn.textContent = "Salin";
-          btn.onclick = () => {
-            navigator.clipboard.writeText(block.innerText);
-            btn.textContent = "Tersalin!";
-            setTimeout(() => (btn.textContent = "Salin"), 1500);
+    function renderAssistantSegments(container, rawText) {
+      const segments = splitTextAndCode(rawText);
+      const prosePartsOnly = segments
+        .filter(s => s.type === "prose")
+        .map(s => s.content)
+        .join("\n\n")
+        .trim();
+
+      segments.forEach((seg) => {
+        if (seg.type === "prose") {
+          const proseBox = document.createElement("div");
+          proseBox.className = "msg-prose-segment";
+          proseBox.innerHTML = formatAssistantHtml(seg.content);
+          container.appendChild(proseBox);
+        } else {
+          const pre = document.createElement("pre");
+          const codeEl = document.createElement("code");
+          if (seg.lang) {
+            codeEl.className = `language-${seg.lang}`;
+          }
+          codeEl.textContent = seg.content;
+          pre.appendChild(codeEl);
+
+          if (window.hljs) {
+            hljs.highlightElement(codeEl);
+          }
+
+          const actionGroup = document.createElement("div");
+          actionGroup.className = "code-action-group";
+
+          const copyBtn = document.createElement("button");
+          copyBtn.type = "button";
+          copyBtn.className = "copy-code-btn";
+          copyBtn.textContent = "Salin";
+          copyBtn.onclick = () => {
+            navigator.clipboard?.writeText(seg.content).catch(() => {});
+            copyBtn.textContent = "Tersalin!";
+            setTimeout(() => (copyBtn.textContent = "Salin"), 1500);
           };
-          pre.appendChild(btn);
+
+          // Paste khusus blok kode ini saja (kata pembuka/penutup AI tidak ikut)
+          const pasteCodeBtn = document.createElement("button");
+          pasteCodeBtn.type = "button";
+          pasteCodeBtn.className = "paste-code-btn";
+          pasteCodeBtn.textContent = "Paste Kode";
+          pasteCodeBtn.onclick = () => {
+            insertTextToInput(seg.content);
+            pasteCodeBtn.textContent = "Tertempel!";
+            setTimeout(() => (pasteCodeBtn.textContent = "Paste Kode"), 1500);
+          };
+
+          actionGroup.appendChild(copyBtn);
+          actionGroup.appendChild(pasteCodeBtn);
+          pre.appendChild(actionGroup);
+          container.appendChild(pre);
         }
       });
+
+      // Tombol paste sekali ketuk di pojok kanan atas teks biasa (jika ada teks non-kode)
+      if (prosePartsOnly) {
+        const pasteTextBtn = document.createElement("button");
+        pasteTextBtn.type = "button";
+        pasteTextBtn.className = "top-paste-btn";
+        pasteTextBtn.textContent = "Paste";
+        pasteTextBtn.title = "Tempel teks biasa saja (tanpa blok kode)";
+        pasteTextBtn.onclick = () => {
+          insertTextToInput(prosePartsOnly);
+          pasteTextBtn.textContent = "Tertempel!";
+          setTimeout(() => (pasteTextBtn.textContent = "Paste"), 1500);
+        };
+        container.prepend(pasteTextBtn);
+      }
     }
 
     function createMessageElement(msg) {
@@ -1490,6 +1656,27 @@
 
       const bubble = document.createElement("div");
       bubble.className = "msg-bubble";
+
+      if (msg.role === "user") {
+        const pasteUserBtn = document.createElement("button");
+        pasteUserBtn.type = "button";
+        pasteUserBtn.className = "top-paste-btn";
+        pasteUserBtn.textContent = "Paste";
+        pasteUserBtn.title = "Tempel ke kolom ketik";
+        pasteUserBtn.onclick = async () => {
+          const clipText = await readClipboardTextSafe();
+          if (clipText) {
+            insertTextToInput(clipText);
+            pasteUserBtn.textContent = "Tertempel!";
+            setTimeout(() => (pasteUserBtn.textContent = "Paste"), 1500);
+          } else if (msg.content) {
+            insertTextToInput(msg.content);
+            pasteUserBtn.textContent = "Tertempel!";
+            setTimeout(() => (pasteUserBtn.textContent = "Paste"), 1500);
+          }
+        };
+        bubble.appendChild(pasteUserBtn);
+      }
 
       if (Array.isArray(msg.attachmentsMeta) && msg.attachmentsMeta.length > 0) {
         const attBox = document.createElement("div");
@@ -1512,9 +1699,8 @@
 
       if (msg.role === "assistant") {
         const contentDiv = document.createElement("div");
-        contentDiv.innerHTML = formatAssistantHtml(msg.content);
+        renderAssistantSegments(contentDiv, msg.content || "");
         bubble.appendChild(contentDiv);
-        enhanceCodeBlocks(bubble);
       } else if (msg.content) {
         const textDiv = document.createElement("div");
         textDiv.innerHTML = escapeHtml(msg.content).replace(/\n/g, "<br>");
