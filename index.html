@@ -873,6 +873,13 @@
       transition: 0.18s ease;
     }
 
+    .send-btn.cancel-mode {
+      background: rgba(248, 113, 113, 0.18);
+      border: 1px solid rgba(248, 113, 113, 0.65);
+      color: var(--danger);
+      box-shadow: 0 0 14px rgba(248, 113, 113, 0.25);
+    }
+
     .send-btn:disabled {
       opacity: 0.45;
       cursor: not-allowed;
@@ -1131,9 +1138,13 @@
         </button>
 
         <button type="button" class="send-btn" id="sendBtn" title="Kirim" aria-label="Kirim">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <svg id="sendIcon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
             <line x1="22" y1="2" x2="11" y2="13"></line>
             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+          <svg id="cancelIcon" style="display:none;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
         </button>
       </div>
@@ -1175,6 +1186,7 @@
     let currentSessionId = null;
     let pendingAttachments = [];
     let isSending = false;
+    let activeAbortController = null;
     let cameraStream = null;
     let useFrontCamera = false;
 
@@ -1182,6 +1194,8 @@
     const welcomeScreen = document.getElementById("welcomeScreen");
     const messageInput = document.getElementById("messageInput");
     const sendBtn = document.getElementById("sendBtn");
+    const sendIcon = document.getElementById("sendIcon");
+    const cancelIcon = document.getElementById("cancelIcon");
     const micBtn = document.getElementById("micBtn");
     const voiceWaveBar = document.getElementById("voiceWaveBar");
 
@@ -1214,6 +1228,36 @@
     const capturePhotoBtn = document.getElementById("capturePhotoBtn");
     const closeCameraBtn = document.getElementById("closeCameraBtn");
 
+    function setSendCancelMode(sending) {
+      isSending = sending;
+      sendBtn.classList.toggle("cancel-mode", sending);
+      sendBtn.title = sending ? "Batalkan Perintah" : "Kirim";
+      sendBtn.setAttribute("aria-label", sending ? "Batalkan Perintah" : "Kirim");
+      sendIcon.style.display = sending ? "none" : "block";
+      cancelIcon.style.display = sending ? "block" : "none";
+    }
+
+    function cancelAiThinking() {
+      if (!isSending) return;
+      if (activeAbortController) {
+        activeAbortController.abort();
+        activeAbortController = null;
+      }
+      const loadingRow = document.getElementById("aiLoadingRow");
+      if (loadingRow) loadingRow.remove();
+
+      const session = getCurrentSession();
+      if (session) {
+        session.messages.push({
+          role: "assistant",
+          content: "Perintah dibatalkan."
+        });
+        saveSessions();
+        renderChat();
+      }
+      setSendCancelMode(false);
+    }
+
     // --- SESSION MANAGEMENT ---
     function loadSessions() {
       try {
@@ -1242,6 +1286,11 @@
     }
 
     function createNewSession(render = true) {
+      if (isSending && activeAbortController) {
+        activeAbortController.abort();
+        activeAbortController = null;
+        setSendCancelMode(false);
+      }
       const id = "chat_" + Date.now();
       sessions.unshift({
         id,
@@ -1260,6 +1309,11 @@
 
     function deleteCurrentSession() {
       if (!currentSessionId) return;
+      if (isSending && activeAbortController) {
+        activeAbortController.abort();
+        activeAbortController = null;
+        setSendCancelMode(false);
+      }
       sessions = sessions.filter(s => s.id !== currentSessionId);
       if (sessions.length === 0) {
         createNewSession(true);
@@ -1766,7 +1820,7 @@
       chatArea.scrollTop = chatArea.scrollHeight;
     }
 
-    // --- VOICE INPUT (MENDENGARKAN TANPA PUTUS + GELOMBANG + CEK TEKS ATAU LANGSUNG KIRIM) ---
+    // --- VOICE INPUT (ANTI DOUBLE/TRIPLE + MENDENGARKAN TANPA PUTUS) ---
     let stopContinuousVoice = () => {};
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1778,18 +1832,27 @@
       recognition.maxAlternatives = 1;
 
       let continuousActive = false;
-      let committedText = "";
       let baseInputBeforeVoice = "";
+      let finalChunks = [];
+      let currentInterim = "";
+      let lastFinalSignature = "";
+      let lastFinalTime = 0;
       let restartTimer = null;
+
+      function normalizeSpoken(str) {
+        return String(str || "").replace(/\s+/g, " ").trim();
+      }
 
       function setListeningUi(active) {
         micBtn.classList.toggle("listening", active);
         voiceWaveBar.classList.toggle("active", active);
       }
 
-      function syncVoiceToInput(interimText = "") {
-        const spoken = [committedText.trim(), interimText.trim()].filter(Boolean).join(" ").trim();
-        const combined = [baseInputBeforeVoice.trim(), spoken].filter(Boolean).join(" ").trim();
+      function syncVoiceToInput() {
+        const spokenParts = [...finalChunks];
+        if (currentInterim) spokenParts.push(currentInterim);
+        const spokenText = normalizeSpoken(spokenParts.join(" "));
+        const combined = [normalizeSpoken(baseInputBeforeVoice), spokenText].filter(Boolean).join(" ").trim();
         messageInput.value = combined;
         autoResizeInput();
       }
@@ -1798,7 +1861,10 @@
         if (continuousActive) return;
         continuousActive = true;
         baseInputBeforeVoice = messageInput.value.trim();
-        committedText = "";
+        finalChunks = [];
+        currentInterim = "";
+        lastFinalSignature = "";
+        lastFinalTime = 0;
         setListeningUi(true);
         try {
           recognition.start();
@@ -1808,11 +1874,12 @@
       stopContinuousVoice = function ({ focusForReview = false } = {}) {
         continuousActive = false;
         clearTimeout(restartTimer);
+        currentInterim = "";
         setListeningUi(false);
         try {
           recognition.stop();
         } catch (_) {}
-        syncVoiceToInput("");
+        syncVoiceToInput();
         if (focusForReview) {
           messageInput.focus();
           const len = messageInput.value.length;
@@ -1822,7 +1889,6 @@
 
       micBtn.addEventListener("click", () => {
         if (continuousActive) {
-          // Matikan mic agar hasil suara tampil jelas di kolom ketik untuk diperiksa
           stopContinuousVoice({ focusForReview: true });
         } else {
           startContinuousVoice();
@@ -1837,23 +1903,34 @@
 
       recognition.onresult = (event) => {
         if (!continuousActive) return;
-        let finalChunk = "";
-        let interimChunk = "";
 
-        for (let i = event.resultIndex; i < event.results.length; i++) {
+        let interimNow = "";
+        const startIdx = typeof event.resultIndex === "number" ? event.resultIndex : 0;
+
+        for (let i = startIdx; i < event.results.length; i++) {
           const res = event.results[i];
-          const transcript = res?.[0]?.transcript || "";
+          const rawTranscript = normalizeSpoken(res?.[0]?.transcript || "");
+          if (!rawTranscript) continue;
+
           if (res.isFinal) {
-            finalChunk += transcript + " ";
+            const now = Date.now();
+            const prevChunk = finalChunks[finalChunks.length - 1] || "";
+            const isDuplicateBurst =
+              (rawTranscript.toLowerCase() === lastFinalSignature && now - lastFinalTime < 1400) ||
+              prevChunk.toLowerCase() === rawTranscript.toLowerCase();
+
+            if (!isDuplicateBurst) {
+              finalChunks.push(rawTranscript);
+              lastFinalSignature = rawTranscript.toLowerCase();
+              lastFinalTime = now;
+            }
           } else {
-            interimChunk += transcript + " ";
+            interimNow = rawTranscript;
           }
         }
 
-        if (finalChunk.trim()) {
-          committedText = `${committedText} ${finalChunk.trim()}`.trim();
-        }
-        syncVoiceToInput(interimChunk.trim());
+        currentInterim = interimNow;
+        syncVoiceToInput();
       };
 
       recognition.onerror = (event) => {
@@ -1864,6 +1941,8 @@
       };
 
       recognition.onend = () => {
+        currentInterim = "";
+        syncVoiceToInput();
         if (continuousActive) {
           clearTimeout(restartTimer);
           restartTimer = setTimeout(() => {
@@ -1871,7 +1950,7 @@
             try {
               recognition.start();
             } catch (_) {}
-          }, 120);
+          }, 180);
         } else {
           setListeningUi(false);
         }
@@ -1882,11 +1961,13 @@
       });
     }
 
-    // --- KIRIM PESAN KE WORKER ---
+    // --- KIRIM / BATALKAN PERINTAH KE WORKER ---
     async function sendMessage(customText) {
-      if (isSending) return;
+      if (isSending) {
+        cancelAiThinking();
+        return;
+      }
 
-      // Jika mic masih menyala saat tombol kirim ditekan, hentikan mic dan langsung kirim
       stopContinuousVoice({ focusForReview: false });
 
       const text = (typeof customText === "string" ? customText : messageInput.value).trim();
@@ -1929,9 +2010,11 @@
       pendingAttachments = [];
       renderAttachmentPreviews();
 
-      isSending = true;
-      sendBtn.disabled = true;
+      setSendCancelMode(true);
+      activeAbortController = new AbortController();
+
       const loadingRow = document.createElement("div");
+      loadingRow.id = "aiLoadingRow";
       loadingRow.className = "message-row assistant";
       loadingRow.innerHTML = `
         <div class="msg-bubble">
@@ -1959,6 +2042,7 @@
         const response = await fetch(WORKER_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          signal: activeAbortController.signal,
           body: JSON.stringify({
             messages: apiMessages,
             attachments: attachmentsToSend
@@ -1966,7 +2050,7 @@
         });
 
         const data = await response.json();
-        loadingRow.remove();
+        document.getElementById("aiLoadingRow")?.remove();
 
         if (!response.ok || data.error) {
           session.messages.push({
@@ -1980,16 +2064,21 @@
           });
         }
       } catch (err) {
-        loadingRow.remove();
+        document.getElementById("aiLoadingRow")?.remove();
+        if (err && err.name === "AbortError") {
+          return;
+        }
         session.messages.push({
           role: "assistant",
           content: "⚠️ Gagal terhubung ke server REZZ AI. Periksa koneksi internetmu."
         });
       } finally {
-        isSending = false;
-        sendBtn.disabled = false;
-        saveSessions();
-        renderChat();
+        if (activeAbortController) {
+          activeAbortController = null;
+          setSendCancelMode(false);
+          saveSessions();
+          renderChat();
+        }
       }
     }
 
@@ -2003,7 +2092,7 @@
     messageInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        sendMessage();
+        if (!isSending) sendMessage();
       }
     });
 
@@ -2012,7 +2101,7 @@
     document.querySelectorAll(".suggestion-card").forEach((card) => {
       card.addEventListener("click", () => {
         const prompt = card.getAttribute("data-prompt");
-        if (prompt) sendMessage(prompt);
+        if (prompt && !isSending) sendMessage(prompt);
       });
     });
 
