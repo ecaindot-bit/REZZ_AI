@@ -556,6 +556,75 @@
       z-index: 25;
     }
 
+    /* GELOMBANG SUARA SAAT MENDENGARKAN */
+    .voice-wave-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      border-radius: 14px;
+      background: rgba(10, 22, 32, 0.95);
+      border: 1px solid var(--border-cyan-strong);
+      box-shadow: 0 0 18px rgba(34, 211, 238, 0.16);
+    }
+
+    .voice-wave-bar.active {
+      display: flex;
+    }
+
+    .voice-wave-left {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+    }
+
+    .wave-bars {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    .wave-bars span {
+      width: 3.5px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--cyan);
+      box-shadow: 0 0 8px rgba(34, 211, 238, 0.65);
+      animation: wavePulse 0.85s ease-in-out infinite;
+    }
+
+    .wave-bars span:nth-child(1) { animation-delay: 0s; }
+    .wave-bars span:nth-child(2) { animation-delay: 0.14s; }
+    .wave-bars span:nth-child(3) { animation-delay: 0.28s; }
+    .wave-bars span:nth-child(4) { animation-delay: 0.42s; }
+    .wave-bars span:nth-child(5) { animation-delay: 0.2s; }
+
+    @keyframes wavePulse {
+      0%, 100% { height: 5px; opacity: 0.55; }
+      50% { height: 20px; opacity: 1; }
+    }
+
+    .voice-wave-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--cyan);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .voice-wave-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
     .attachment-preview-bar {
       display: none;
       flex-wrap: wrap;
@@ -776,10 +845,10 @@
     }
 
     .mic-btn.listening {
-      background: rgba(248, 113, 113, 0.2);
-      border-color: var(--danger);
-      color: var(--danger);
-      box-shadow: 0 0 14px rgba(248, 113, 113, 0.45);
+      background: rgba(34, 211, 238, 0.22);
+      border-color: var(--cyan);
+      color: #ffffff;
+      box-shadow: 0 0 16px rgba(34, 211, 238, 0.5);
       animation: pulseMic 1.1s infinite;
     }
 
@@ -969,6 +1038,21 @@
 
     <!-- INPUT & MENU PLUS (+) -->
     <div class="input-wrapper">
+      <!-- Gelombang Suara saat Mendengarkan -->
+      <div class="voice-wave-bar" id="voiceWaveBar" aria-live="polite">
+        <div class="voice-wave-left">
+          <div class="wave-bars" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <span class="voice-wave-label">Mendengarkan terus...</span>
+        </div>
+        <span class="voice-wave-hint">Tap Mic cek teks / Kirim</span>
+      </div>
+
       <!-- Preview Lampiran -->
       <div class="attachment-preview-bar" id="attachmentPreviewBar"></div>
 
@@ -1099,6 +1183,7 @@
     const messageInput = document.getElementById("messageInput");
     const sendBtn = document.getElementById("sendBtn");
     const micBtn = document.getElementById("micBtn");
+    const voiceWaveBar = document.getElementById("voiceWaveBar");
 
     const plusBtn = document.getElementById("plusBtn");
     const plusMenu = document.getElementById("plusMenu");
@@ -1269,7 +1354,6 @@
     async function openCameraWithPermission() {
       togglePlusMenu(false);
 
-      // Minta izin kamera via getUserMedia terlebih dahulu agar dialog izin kamera muncul jelas
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         try {
           if (cameraStream) {
@@ -1287,7 +1371,6 @@
         }
       }
 
-      // Fallback langsung ke aplikasi kamera bawaan perangkat
       cameraInput.click();
     }
 
@@ -1582,7 +1665,6 @@
             hljs.highlightElement(codeEl);
           }
 
-          // Salin khusus isi blok kode ini saja (kata pembuka/penutup AI tidak ikut)
           const copyBtn = document.createElement("button");
           copyBtn.type = "button";
           copyBtn.className = "copy-code-btn";
@@ -1598,7 +1680,6 @@
         }
       });
 
-      // Tombol Salin sekali ketuk di pojok kanan atas teks biasa (tanpa blok kode)
       if (prosePartsOnly) {
         const copyTextBtn = document.createElement("button");
         copyTextBtn.type = "button";
@@ -1685,9 +1766,128 @@
       chatArea.scrollTop = chatArea.scrollHeight;
     }
 
+    // --- VOICE INPUT (MENDENGARKAN TANPA PUTUS + GELOMBANG + CEK TEKS ATAU LANGSUNG KIRIM) ---
+    let stopContinuousVoice = () => {};
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.lang = "id-ID";
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
+
+      let continuousActive = false;
+      let committedText = "";
+      let baseInputBeforeVoice = "";
+      let restartTimer = null;
+
+      function setListeningUi(active) {
+        micBtn.classList.toggle("listening", active);
+        voiceWaveBar.classList.toggle("active", active);
+      }
+
+      function syncVoiceToInput(interimText = "") {
+        const spoken = [committedText.trim(), interimText.trim()].filter(Boolean).join(" ").trim();
+        const combined = [baseInputBeforeVoice.trim(), spoken].filter(Boolean).join(" ").trim();
+        messageInput.value = combined;
+        autoResizeInput();
+      }
+
+      function startContinuousVoice() {
+        if (continuousActive) return;
+        continuousActive = true;
+        baseInputBeforeVoice = messageInput.value.trim();
+        committedText = "";
+        setListeningUi(true);
+        try {
+          recognition.start();
+        } catch (_) {}
+      }
+
+      stopContinuousVoice = function ({ focusForReview = false } = {}) {
+        continuousActive = false;
+        clearTimeout(restartTimer);
+        setListeningUi(false);
+        try {
+          recognition.stop();
+        } catch (_) {}
+        syncVoiceToInput("");
+        if (focusForReview) {
+          messageInput.focus();
+          const len = messageInput.value.length;
+          messageInput.setSelectionRange(len, len);
+        }
+      };
+
+      micBtn.addEventListener("click", () => {
+        if (continuousActive) {
+          // Matikan mic agar hasil suara tampil jelas di kolom ketik untuk diperiksa
+          stopContinuousVoice({ focusForReview: true });
+        } else {
+          startContinuousVoice();
+        }
+      });
+
+      recognition.onstart = () => {
+        if (continuousActive) {
+          setListeningUi(true);
+        }
+      };
+
+      recognition.onresult = (event) => {
+        if (!continuousActive) return;
+        let finalChunk = "";
+        let interimChunk = "";
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const res = event.results[i];
+          const transcript = res?.[0]?.transcript || "";
+          if (res.isFinal) {
+            finalChunk += transcript + " ";
+          } else {
+            interimChunk += transcript + " ";
+          }
+        }
+
+        if (finalChunk.trim()) {
+          committedText = `${committedText} ${finalChunk.trim()}`.trim();
+        }
+        syncVoiceToInput(interimChunk.trim());
+      };
+
+      recognition.onerror = (event) => {
+        if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+          stopContinuousVoice({ focusForReview: true });
+          alert("Izin mikrofon ditolak atau belum aktif.");
+        }
+      };
+
+      recognition.onend = () => {
+        if (continuousActive) {
+          clearTimeout(restartTimer);
+          restartTimer = setTimeout(() => {
+            if (!continuousActive) return;
+            try {
+              recognition.start();
+            } catch (_) {}
+          }, 120);
+        } else {
+          setListeningUi(false);
+        }
+      };
+    } else {
+      micBtn.addEventListener("click", () => {
+        alert("Browser ini belum mendukung input suara.");
+      });
+    }
+
     // --- KIRIM PESAN KE WORKER ---
     async function sendMessage(customText) {
       if (isSending) return;
+
+      // Jika mic masih menyala saat tombol kirim ditekan, hentikan mic dan langsung kirim
+      stopContinuousVoice({ focusForReview: false });
 
       const text = (typeof customText === "string" ? customText : messageInput.value).trim();
       if (!text && pendingAttachments.length === 0) return;
@@ -1695,7 +1895,6 @@
       const session = getCurrentSession();
       if (!session) return;
 
-      // Siapkan metadata ringan untuk riwayat chat (tanpa menyimpan base64 video/file besar ke localStorage)
       const attachmentsToSend = pendingAttachments.map(item => ({
         name: item.name,
         mimeType: item.mimeType,
@@ -1730,7 +1929,6 @@
       pendingAttachments = [];
       renderAttachmentPreviews();
 
-      // Bubble loading
       isSending = true;
       sendBtn.disabled = true;
       const loadingRow = document.createElement("div");
@@ -1744,7 +1942,6 @@
       chatArea.scrollTop = chatArea.scrollHeight;
 
       try {
-        // Kirim riwayat percakapan ringkas + lampiran aktif saat ini
         const apiMessages = session.messages.map((m, idx) => {
           let contentText = m.content || "";
           if (!contentText && idx === session.messages.length - 1 && attachmentsToSend.length > 0) {
@@ -1818,54 +2015,6 @@
         if (prompt) sendMessage(prompt);
       });
     });
-
-    // --- VOICE INPUT (LISTEN-THEN-PROCESS) ---
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.lang = "id-ID";
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
-
-      let listening = false;
-
-      micBtn.addEventListener("click", () => {
-        if (listening) {
-          recognition.stop();
-          return;
-        }
-        try {
-          recognition.start();
-        } catch (_) {}
-      });
-
-      recognition.onstart = () => {
-        listening = true;
-        micBtn.classList.add("listening");
-      };
-
-      recognition.onresult = (event) => {
-        const transcript = event.results?.[0]?.[0]?.transcript || "";
-        if (transcript.trim()) {
-          messageInput.value = (messageInput.value ? messageInput.value + " " : "") + transcript.trim();
-          autoResizeInput();
-        }
-      };
-
-      recognition.onerror = () => {
-        listening = false;
-        micBtn.classList.remove("listening");
-      };
-
-      recognition.onend = () => {
-        listening = false;
-        micBtn.classList.remove("listening");
-      };
-    } else {
-      micBtn.addEventListener("click", () => {
-        alert("Browser ini belum mendukung input suara.");
-      });
-    }
 
     // --- INIT ---
     loadSessions();
