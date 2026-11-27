@@ -424,7 +424,6 @@
       width: 100%;
     }
 
-    /* TOMBOL SALIN DI POJOK KANAN ATAS */
     .top-copy-btn {
       position: sticky;
       top: 0;
@@ -476,7 +475,6 @@
       color: var(--cyan);
     }
 
-    /* SEGMEN TEKS BIASA & BLOK KODE TERPISAH */
     .msg-prose-segment {
       margin-bottom: 8px;
     }
@@ -525,7 +523,6 @@
       background: rgba(34, 211, 238, 0.28);
     }
 
-    /* LOADING DOTS */
     .typing-indicator {
       display: inline-flex;
       align-items: center;
@@ -556,7 +553,6 @@
       z-index: 25;
     }
 
-    /* GELOMBANG SUARA SAAT MENDENGARKAN */
     .voice-wave-bar {
       display: none;
       align-items: center;
@@ -710,7 +706,6 @@
       justify-content: center;
     }
 
-    /* POPUP MENU TANDA PLUS (+) ALA GEMINI */
     .plus-menu {
       position: absolute;
       left: 14px;
@@ -772,7 +767,6 @@
       flex-shrink: 0;
     }
 
-    /* INPUT BAR */
     .input-bar {
       display: flex;
       align-items: flex-end;
@@ -893,7 +887,6 @@
       margin-top: 6px;
     }
 
-    /* MODAL KAMERA LANGSUNG (JIKA BROWSER/WEBVIEW MENDUKUNG GETUSERMEDIA) */
     .camera-modal {
       position: fixed;
       inset: 0;
@@ -1045,7 +1038,6 @@
 
     <!-- INPUT & MENU PLUS (+) -->
     <div class="input-wrapper">
-      <!-- Gelombang Suara saat Mendengarkan -->
       <div class="voice-wave-bar" id="voiceWaveBar" aria-live="polite">
         <div class="voice-wave-left">
           <div class="wave-bars" aria-hidden="true">
@@ -1060,10 +1052,8 @@
         <span class="voice-wave-hint">Tap Mic cek teks / Kirim</span>
       </div>
 
-      <!-- Preview Lampiran -->
       <div class="attachment-preview-bar" id="attachmentPreviewBar"></div>
 
-      <!-- Popup Menu Tanda Plus (+) -->
       <div class="plus-menu" id="plusMenu" role="menu">
         <button type="button" class="plus-menu-item" id="optCamera">
           <span class="plus-menu-icon">
@@ -1107,13 +1097,11 @@
         </button>
       </div>
 
-      <!-- Hidden Inputs untuk Kamera, Foto, Video, dan File -->
       <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden />
       <input type="file" id="photoInput" accept="image/*" multiple hidden />
       <input type="file" id="videoInput" accept="video/*" hidden />
       <input type="file" id="fileInput" accept=".pdf,.txt,.md,.csv,.json,.js,.html,.css,.py,.xml,.doc,.docx,application/pdf,text/*" multiple hidden />
 
-      <!-- Kolom Ketik -->
       <div class="input-bar">
         <button type="button" class="plus-btn" id="plusBtn" title="Tambah Lampiran" aria-label="Tambah Lampiran">
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
@@ -1180,7 +1168,7 @@
     const WORKER_URL = "https://rezzai.eyzz1112.workers.dev";
     const STORAGE_KEY = "rezz_ai_sessions_v2";
     const MAX_FILES = 5;
-    const MAX_SINGLE_FILE_BYTES = 10 * 1024 * 1024; // ~10 MB
+    const MAX_SINGLE_FILE_BYTES = 10 * 1024 * 1024;
 
     let sessions = [];
     let currentSessionId = null;
@@ -1258,7 +1246,6 @@
       setSendCancelMode(false);
     }
 
-    // --- SESSION MANAGEMENT ---
     function loadSessions() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -1364,7 +1351,6 @@
       });
     }
 
-    // --- DRAWER ---
     function openDrawer() {
       renderHistoryList();
       historyDrawer.classList.add("open");
@@ -1386,7 +1372,6 @@
     });
     deleteChatBtn.addEventListener("click", deleteCurrentSession);
 
-    // --- MENU PLUS (+) ---
     function togglePlusMenu(forceState) {
       const willOpen = typeof forceState === "boolean" ? forceState : !plusMenu.classList.contains("open");
       plusMenu.classList.toggle("open", willOpen);
@@ -1404,7 +1389,6 @@
       }
     });
 
-    // --- IZIN KAMERA & AMBIL FOTO ---
     async function openCameraWithPermission() {
       togglePlusMenu(false);
 
@@ -1466,7 +1450,6 @@
 
     closeCameraBtn.addEventListener("click", stopLiveCamera);
 
-    // --- FOTO, VIDEO, DAN FILE ---
     optPhoto.addEventListener("click", () => {
       togglePlusMenu(false);
       photoInput.click();
@@ -1621,7 +1604,6 @@
       });
     }
 
-    // --- SALIN HELPER & SEPARASI TEKS / KODE ---
     async function copyToClipboardSafe(text) {
       if (!text) return;
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -1820,7 +1802,7 @@
       chatArea.scrollTop = chatArea.scrollHeight;
     }
 
-    // --- VOICE INPUT (ANTI DOUBLE/TRIPLE + MENDENGARKAN TANPA PUTUS) ---
+    // --- VOICE INPUT (ANTI DOUBLE/TRIPLE + BERSIH SAAT KIRIM LANGSUNG) ---
     let stopContinuousVoice = () => {};
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1831,6 +1813,7 @@
       recognition.interimResults = true;
       recognition.maxAlternatives = 1;
 
+      let voiceSessionId = 0;
       let continuousActive = false;
       let baseInputBeforeVoice = "";
       let finalChunks = [];
@@ -1848,7 +1831,16 @@
         voiceWaveBar.classList.toggle("active", active);
       }
 
-      function syncVoiceToInput() {
+      function resetVoiceBuffers() {
+        baseInputBeforeVoice = "";
+        finalChunks = [];
+        currentInterim = "";
+        lastFinalSignature = "";
+        lastFinalTime = 0;
+      }
+
+      function syncVoiceToInput(sessionToken) {
+        if (!continuousActive || sessionToken !== voiceSessionId) return;
         const spokenParts = [...finalChunks];
         if (currentInterim) spokenParts.push(currentInterim);
         const spokenText = normalizeSpoken(spokenParts.join(" "));
@@ -1859,6 +1851,8 @@
 
       function startContinuousVoice() {
         if (continuousActive) return;
+        voiceSessionId += 1;
+        const activeToken = voiceSessionId;
         continuousActive = true;
         baseInputBeforeVoice = messageInput.value.trim();
         finalChunks = [];
@@ -1866,20 +1860,32 @@
         lastFinalSignature = "";
         lastFinalTime = 0;
         setListeningUi(true);
+
         try {
           recognition.start();
-        } catch (_) {}
+        } catch (_) {
+          if (activeToken === voiceSessionId) {
+            setListeningUi(true);
+          }
+        }
       }
 
-      stopContinuousVoice = function ({ focusForReview = false } = {}) {
+      stopContinuousVoice = function ({ focusForReview = false, resetTranscript = false } = {}) {
+        voiceSessionId += 1;
         continuousActive = false;
         clearTimeout(restartTimer);
-        currentInterim = "";
         setListeningUi(false);
+
+        if (resetTranscript) {
+          resetVoiceBuffers();
+        } else {
+          currentInterim = "";
+        }
+
         try {
           recognition.stop();
         } catch (_) {}
-        syncVoiceToInput();
+
         if (focusForReview) {
           messageInput.focus();
           const len = messageInput.value.length;
@@ -1889,7 +1895,7 @@
 
       micBtn.addEventListener("click", () => {
         if (continuousActive) {
-          stopContinuousVoice({ focusForReview: true });
+          stopContinuousVoice({ focusForReview: true, resetTranscript: false });
         } else {
           startContinuousVoice();
         }
@@ -1902,6 +1908,7 @@
       };
 
       recognition.onresult = (event) => {
+        const activeToken = voiceSessionId;
         if (!continuousActive) return;
 
         let interimNow = "";
@@ -1930,30 +1937,30 @@
         }
 
         currentInterim = interimNow;
-        syncVoiceToInput();
+        syncVoiceToInput(activeToken);
       };
 
       recognition.onerror = (event) => {
+        if (!continuousActive) return;
         if (event.error === "not-allowed" || event.error === "service-not-allowed") {
-          stopContinuousVoice({ focusForReview: true });
+          stopContinuousVoice({ focusForReview: true, resetTranscript: false });
           alert("Izin mikrofon ditolak atau belum aktif.");
         }
       };
 
       recognition.onend = () => {
-        currentInterim = "";
-        syncVoiceToInput();
-        if (continuousActive) {
-          clearTimeout(restartTimer);
-          restartTimer = setTimeout(() => {
-            if (!continuousActive) return;
-            try {
-              recognition.start();
-            } catch (_) {}
-          }, 180);
-        } else {
+        if (!continuousActive) {
           setListeningUi(false);
+          return;
         }
+        currentInterim = "";
+        clearTimeout(restartTimer);
+        restartTimer = setTimeout(() => {
+          if (!continuousActive) return;
+          try {
+            recognition.start();
+          } catch (_) {}
+        }, 180);
       };
     } else {
       micBtn.addEventListener("click", () => {
@@ -1968,9 +1975,10 @@
         return;
       }
 
-      stopContinuousVoice({ focusForReview: false });
+      const wasCustomText = typeof customText === "string";
+      stopContinuousVoice({ focusForReview: false, resetTranscript: !wasCustomText });
 
-      const text = (typeof customText === "string" ? customText : messageInput.value).trim();
+      const text = (wasCustomText ? customText : messageInput.value).trim();
       if (!text && pendingAttachments.length === 0) return;
 
       const session = getCurrentSession();
@@ -2005,8 +2013,10 @@
       renderHistoryList();
       renderChat();
 
-      messageInput.value = "";
-      autoResizeInput();
+      if (!wasCustomText) {
+        messageInput.value = "";
+        autoResizeInput();
+      }
       pendingAttachments = [];
       renderAttachmentPreviews();
 
@@ -2082,7 +2092,6 @@
       }
     }
 
-    // --- AUTO RESIZE TEXTAREA & ENTER ---
     function autoResizeInput() {
       messageInput.style.height = "auto";
       messageInput.style.height = Math.min(messageInput.scrollHeight, 110) + "px";
@@ -2105,7 +2114,6 @@
       });
     });
 
-    // --- INIT ---
     loadSessions();
     renderHistoryList();
     renderChat();
