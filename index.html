@@ -1802,7 +1802,7 @@
       chatArea.scrollTop = chatArea.scrollHeight;
     }
 
-    // --- VOICE INPUT (ANTI DOUBLE/TRIPLE + BERSIH SAAT KIRIM LANGSUNG) ---
+    // --- VOICE INPUT (ANTI DOUBLE/TRIPLE DI BROWSER + DEDUP OVERLAP) ---
     let stopContinuousVoice = () => {};
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1816,14 +1816,62 @@
       let voiceSessionId = 0;
       let continuousActive = false;
       let baseInputBeforeVoice = "";
-      let finalChunks = [];
+      let committedSpokenText = "";
       let currentInterim = "";
-      let lastFinalSignature = "";
-      let lastFinalTime = 0;
+      let lastProcessedFinalText = "";
       let restartTimer = null;
 
       function normalizeSpoken(str) {
         return String(str || "").replace(/\s+/g, " ").trim();
+      }
+
+      // Hapus kata yang langsung berulang bersebelahan (misal: "halo halo apa kabar")
+      function collapseAdjacentWords(str) {
+        const words = normalizeSpoken(str).split(" ").filter(Boolean);
+        const out = [];
+        for (const w of words) {
+          const prev = out[out.length - 1];
+          if (!prev || prev.toLowerCase() !== w.toLowerCase()) {
+            out.push(w);
+          }
+        }
+        return out.join(" ");
+      }
+
+      // Gabungkan teks yang sudah ada dengan chunk baru tanpa mengulang bagian irisan (overlap)
+      function mergeWithoutOverlap(existingText, incomingChunk) {
+        const base = collapseAdjacentWords(existingText);
+        const chunk = collapseAdjacentWords(incomingChunk);
+        if (!chunk) return base;
+        if (!base) return chunk;
+
+        const lowerBase = base.toLowerCase();
+        const lowerChunk = chunk.toLowerCase();
+
+        // Jika chunk baru sudah persis sama atau sudah tercakup di akhir base
+        if (lowerBase === lowerChunk || lowerBase.endsWith(lowerChunk)) {
+          return base;
+        }
+        // Jika base sudah tercakup di awal chunk (kasus hasil kumulatif dari browser)
+        if (lowerChunk.startsWith(lowerBase) && chunk.length > base.length) {
+          return chunk;
+        }
+
+        // Cek irisan kata: akhir kata `base` == awal kata `chunk`
+        const baseWords = base.split(" ");
+        const chunkWords = chunk.split(" ");
+        const maxOverlap = Math.min(baseWords.length, chunkWords.length);
+
+        for (let len = maxOverlap; len >= 1; len--) {
+          const tail = baseWords.slice(-len).join(" ").toLowerCase();
+          const head = chunkWords.slice(0, len).join(" ").toLowerCase();
+          if (tail === head) {
+            const remainder = chunkWords.slice(len).join(" ");
+            return remainder ? `${base} ${remainder}` : base;
+          }
+        }
+
+        return `${base} ${chunk}`;
       }
 
       function setListeningUi(active) {
@@ -1833,18 +1881,17 @@
 
       function resetVoiceBuffers() {
         baseInputBeforeVoice = "";
-        finalChunks = [];
+        committedSpokenText = "";
         currentInterim = "";
-        lastFinalSignature = "";
-        lastFinalTime = 0;
+        lastProcessedFinalText = "";
       }
 
       function syncVoiceToInput(sessionToken) {
         if (!continuousActive || sessionToken !== voiceSessionId) return;
-        const spokenParts = [...finalChunks];
-        if (currentInterim) spokenParts.push(currentInterim);
-        const spokenText = normalizeSpoken(spokenParts.join(" "));
-        const combined = [normalizeSpoken(baseInputBeforeVoice), spokenText].filter(Boolean).join(" ").trim();
+        const withInterim = currentInterim
+          ? mergeWithoutOverlap(committedSpokenText, currentInterim)
+          : committedSpokenText;
+        const combined = mergeWithoutOverlap(baseInputBeforeVoice, withInterim);
         messageInput.value = combined;
         autoResizeInput();
       }
@@ -1854,11 +1901,10 @@
         voiceSessionId += 1;
         const activeToken = voiceSessionId;
         continuousActive = true;
-        baseInputBeforeVoice = messageInput.value.trim();
-        finalChunks = [];
+        baseInputBeforeVoice = collapseAdjacentWords(messageInput.value);
+        committedSpokenText = "";
         currentInterim = "";
-        lastFinalSignature = "";
-        lastFinalTime = 0;
+        lastProcessedFinalText = "";
         setListeningUi(true);
 
         try {
@@ -1911,32 +1957,28 @@
         const activeToken = voiceSessionId;
         if (!continuousActive) return;
 
-        let interimNow = "";
-        const startIdx = typeof event.resultIndex === "number" ? event.resultIndex : 0;
+        // Bangun transkrip penuh dari hasil yang ada agar browser tidak menggandakan segmen lama
+        let fullFinal = "";
+        let fullInterim = "";
 
-        for (let i = startIdx; i < event.results.length; i++) {
+        for (let i = 0; i < event.results.length; i++) {
           const res = event.results[i];
-          const rawTranscript = normalizeSpoken(res?.[0]?.transcript || "");
+          const rawTranscript = collapseAdjacentWords(res?.[0]?.transcript || "");
           if (!rawTranscript) continue;
 
           if (res.isFinal) {
-            const now = Date.now();
-            const prevChunk = finalChunks[finalChunks.length - 1] || "";
-            const isDuplicateBurst =
-              (rawTranscript.toLowerCase() === lastFinalSignature && now - lastFinalTime < 1400) ||
-              prevChunk.toLowerCase() === rawTranscript.toLowerCase();
-
-            if (!isDuplicateBurst) {
-              finalChunks.push(rawTranscript);
-              lastFinalSignature = rawTranscript.toLowerCase();
-              lastFinalTime = now;
-            }
+            fullFinal = mergeWithoutOverlap(fullFinal, rawTranscript);
           } else {
-            interimNow = rawTranscript;
+            fullInterim = mergeWithoutOverlap(fullInterim, rawTranscript);
           }
         }
 
-        currentInterim = interimNow;
+        if (fullFinal && fullFinal.toLowerCase() !== lastProcessedFinalText.toLowerCase()) {
+          committedSpokenText = mergeWithoutOverlap(committedSpokenText, fullFinal);
+          lastProcessedFinalText = fullFinal;
+        }
+
+        currentInterim = fullInterim;
         syncVoiceToInput(activeToken);
       };
 
@@ -1954,6 +1996,7 @@
           return;
         }
         currentInterim = "";
+        lastProcessedFinalText = "";
         clearTimeout(restartTimer);
         restartTimer = setTimeout(() => {
           if (!continuousActive) return;
